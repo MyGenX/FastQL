@@ -49,6 +49,16 @@
         ]
       },
       {
+        "group": "Integrations",
+        "pages": [
+          "integrations/overview",
+          "integrations/asgi-and-api-frameworks",
+          "integrations/flask-and-django",
+          "integrations/context",
+          "integrations/http-contract"
+        ]
+      },
+      {
         "group": "Tooling",
         "pages": [
           "tooling/dev-server",

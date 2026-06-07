@@ -64,6 +64,7 @@ async def execute(
     variable_values: dict[str, Any] | None = None,
     context: Any = None,
     operation_name: str | None = None,
+    root_value: Any = None,
 ) -> ExecutionResult:
     if isinstance(query, (str, Source)):
         try:
@@ -88,7 +89,9 @@ async def execute(
     except GraphQLError as error:
         return ExecutionResult(errors=[error], executed=False)
 
-    executor = _Executor(schema, document, coerced_variables, context, operation)
+    executor = _Executor(
+        schema, document, coerced_variables, context, operation, root_value
+    )
     data = await executor.execute_operation(operation)
     return ExecutionResult(data=data, errors=executor.errors)
 
@@ -114,12 +117,15 @@ def _get_operation(
 
 
 class _Executor:
-    def __init__(self, schema, document, variable_values, context, operation) -> None:
+    def __init__(
+        self, schema, document, variable_values, context, operation, root_value
+    ) -> None:
         self.schema = schema
         self.variable_values = variable_values
         self.context = context
         self.errors: list[GraphQLError] = []
         self.operation = operation
+        self.root_value = root_value
         self.root_instances: dict[type, Any] = {}
         self.dependency_values: dict[type, Any] = {}
         self.fragments = {
@@ -143,7 +149,9 @@ class _Executor:
         )
         serial = operation.operation == "mutation"
         try:
-            return await self._execute_fields(root_type, None, grouped, [], serial)
+            return await self._execute_fields(
+                root_type, self.root_value, grouped, [], serial
+            )
         except _NullBubble:
             return None
 
@@ -204,7 +212,7 @@ class _Executor:
             parent_type=parent_type,
             schema=self.schema,
             context=self.context,
-            root_value=None,
+            root_value=self.root_value,
             variable_values=self.variable_values,
             operation=self.operation,
             selected_fields=list(field_nodes),

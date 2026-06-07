@@ -1,0 +1,47 @@
+name: Framework integrations
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  adapters:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv run --extra all --extra dev pytest tests/test_http_integration.py tests/test_asgi_integration.py tests/test_framework_integrations.py tests/test_integration_packaging.py
+
+  base-import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv run --extra dev pytest tests/test_integration_packaging.py
+
+  isolated-extra:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - {extra: asgi, module: asgi}
+          - {extra: starlette, module: starlette}
+          - {extra: fastapi, module: fastapi}
+          - {extra: flask, module: flask}
+          - {extra: django, module: django}
+          - {extra: all, module: django}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+      - run: uv run --extra ${{ matrix.extra }} python -c "import importlib; importlib.import_module('fastql.integrations.${{ matrix.module }}')"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import ast
 import re
 import subprocess
 import sys
@@ -103,3 +104,26 @@ def test_documentation_examples_execute_successfully():
             timeout=30,
         )
         assert result.returncode == 0, result.stderr
+
+
+def test_framework_integration_docs_and_examples_are_complete():
+    config = json.loads((DOCS / "docs.json").read_text())
+    pages = set(_navigation_pages(config["navigation"]))
+    expected_pages = {
+        "integrations/overview",
+        "integrations/asgi-and-api-frameworks",
+        "integrations/flask-and-django",
+        "integrations/context",
+        "integrations/http-contract",
+    }
+    assert expected_pages <= pages
+
+    overview = (DOCS / "integrations" / "overview.mdx").read_text()
+    for extra in ("asgi", "starlette", "fastapi", "flask", "django", "all"):
+        assert f"fastql[{extra}]" in overview
+
+    examples = ROOT / "examples" / "integrations"
+    for name in ("asgi", "starlette", "fastapi", "flask", "django"):
+        source = (examples / f"{name}.py").read_text()
+        ast.parse(source)
+        assert "schema" in source

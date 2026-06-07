@@ -1,0 +1,42 @@
+---
+title: Flask and Django
+description: Mount the async-first FastQL handler in synchronous and async-capable frameworks.
+---
+
+## Flask
+
+```python
+from flask import Flask
+from fastql.integrations.flask import create_flask_blueprint
+
+app = Flask(__name__)
+app.register_blueprint(
+    create_flask_blueprint(schema, graphiql=True),
+    url_prefix="/api",
+)
+```
+
+The blueprint uses Flask's request, application context, hooks, and response
+objects. FastQL bridges its async executor at the synchronous request boundary;
+async resolvers remain supported.
+
+## Django
+
+```python
+from fastql.integrations.django import create_django_urlpatterns
+
+urlpatterns = create_django_urlpatterns(
+    schema,
+    path="/graphql",
+    graphiql=True,
+)
+```
+
+The helper returns standard Django URL patterns backed by the async-capable
+`FastQLView`. Include them under another URL prefix using Django's normal URL
+configuration.
+
+Django's CSRF policy remains enabled by default. For an API protected by another
+explicit mechanism, set `csrf_exempt=True` and document that security decision in
+the host project. FastQL does not disable middleware, authentication, sessions,
+or CSRF globally.

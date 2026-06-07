@@ -1,0 +1,38 @@
+---
+title: Web framework integrations
+description: Mount one FastQL schema in ASGI, Starlette, FastAPI, Flask, or Django.
+---
+
+FastQL keeps schema construction and execution independent from HTTP. Production
+applications add one optional adapter that converts the framework request into
+the shared FastQL GraphQL-over-HTTP contract.
+
+| Integration | Install | Public entry point |
+| --- | --- | --- |
+| Generic ASGI | `pip install fastql` or `pip install fastql[asgi]` | `GraphQLASGI` |
+| Starlette | `pip install fastql[starlette]` | `create_starlette_router` |
+| FastAPI | `pip install fastql[fastapi]` | `create_fastapi_router` |
+| Flask | `pip install fastql[flask]` | `create_flask_blueprint` |
+| Django | `pip install fastql[django]` | `create_django_urlpatterns` |
+
+Use `pip install fastql[all]` only for development or applications that truly
+host every adapter. An individual extra does not install unrelated frameworks.
+
+All adapters use the same options: `path`, `context_factory`, `root_value`,
+`graphiql`, `schema_path`, `introspection_path`, and `execution_options`.
+Routing objects stay native to each framework, so middleware, authentication,
+dependencies, URL prefixes, and deployment configuration remain authoritative.
+
+## Compatibility
+
+FastQL supports Python 3.11 and newer. The declared adapter ranges are Starlette
+`>=0.50,<2`, FastAPI `>=0.129,<1`, Flask `>=3.1,<4`, and Django `>=5.2,<6`.
+FastAPI selects its compatible Starlette dependency; applications should not pin
+a conflicting Starlette version.
+
+<CardGroup cols={2}>
+  <Card title="ASGI, Starlette, and FastAPI" href="/integrations/asgi-and-api-frameworks" icon="server" />
+  <Card title="Flask and Django" href="/integrations/flask-and-django" icon="window" />
+  <Card title="HTTP context" href="/integrations/context" icon="brackets-curly" />
+  <Card title="Protocol contract" href="/integrations/http-contract" icon="code" />
+</CardGroup>

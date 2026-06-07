@@ -134,6 +134,26 @@ language: Source → Lexer → Parser → AST  ← hand-built front-end
 The core never imports an HTTP framework. Transports (an optional built-in dev server,
 plus FastAPI/Django/Flask/ASGI adapters) plug in on top and consume `build_schema` / `execute`.
 
+## Web framework integrations
+
+Install only the framework adapter an application uses:
+
+```bash
+pip install fastql[fastapi]   # or starlette, flask, django
+```
+
+```python
+from fastapi import FastAPI
+from fastql.integrations.fastapi import create_fastapi_router
+
+app = FastAPI()
+app.include_router(create_fastapi_router(schema, graphiql=True))
+```
+
+The base installation includes the dependency-free `GraphQLASGI` adapter. See
+the [integration documentation](docs/integrations/overview.mdx) for mounting,
+request context, endpoint configuration, and supported versions.
+
 ## Development
 
 ```bash

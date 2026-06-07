@@ -1,0 +1,28 @@
+---
+title: HTTP context
+description: Access native requests, middleware state, custom values, and response headers.
+---
+
+Every adapter creates an `HTTPContext` before execution. It contains the native
+framework request, host application where available, mutable request state, and
+request-scoped response controls.
+
+```python
+from fastql.integrations import HTTPContext
+
+async def make_context(context: HTTPContext):
+    context.state.current_user = await authenticate(context.request)
+    context.response.set_header("x-request-source", "graphql")
+    return context
+```
+
+Pass the factory to any adapter with `context_factory=make_context`. Factories can
+be synchronous or asynchronous. Returning `None` keeps the supplied context;
+returning another `Context` object replaces it for resolver and `Info.context`
+injection.
+
+For typed application state while preserving request access, subclass
+`HTTPContext` and return that subclass from the factory.
+
+Middleware should populate authentication and request state before the adapter.
+FastQL does not duplicate framework dependency injection or security policy.

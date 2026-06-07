@@ -15,15 +15,12 @@ Routes:
 from __future__ import annotations
 
 import asyncio
-import inspect
 import json
 from dataclasses import dataclass
 from typing import Any, Callable
 from urllib.parse import parse_qs, urlsplit
 
-from fastql.execution import execute
-from fastql.playground import playground_html
-from fastql.sdl import print_schema
+from fastql.integrations.http import GraphQLHTTPHandler, HTTPRequest
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 7691
@@ -37,44 +34,6 @@ _REASONS = {
     405: "Method Not Allowed",
     500: "Internal Server Error",
 }
-
-INTROSPECTION_QUERY = """
-query IntrospectionQuery {
-  __schema {
-    queryType { name }
-    mutationType { name }
-    subscriptionType { name }
-    types {
-      kind
-      name
-      description
-      fields(includeDeprecated: true) {
-        name
-        args { name type { ...TypeRef } }
-        type { ...TypeRef }
-        isDeprecated
-        deprecationReason
-      }
-      inputFields { name type { ...TypeRef } }
-      interfaces { ...TypeRef }
-      enumValues(includeDeprecated: true) {
-        name
-        isDeprecated
-        deprecationReason
-      }
-      possibleTypes { ...TypeRef }
-    }
-    directives { name locations args { name type { ...TypeRef } } }
-  }
-}
-
-fragment TypeRef on __Type {
-  kind
-  name
-  ofType { kind name ofType { kind name ofType { kind name } } }
-}
-"""
-
 
 @dataclass
 class _Response:
@@ -103,77 +62,35 @@ class _Dispatcher:
         self.schema = schema
         self.path = path
         self.context_factory = context_factory
-
-    async def _make_context(self) -> Any:
-        if self.context_factory is None:
-            return None
-        context = self.context_factory()
-        if inspect.isawaitable(context):
-            context = await context
-        return context
+        self.handler = GraphQLHTTPHandler(
+            schema,
+            path=path,
+            context_factory=context_factory,
+            graphiql=True,
+            graphiql_path="/",
+            schema_path="/schema.graphql",
+            introspection_path="/schema.json",
+            use_http_context=False,
+        )
 
     async def dispatch(
         self, method: str, path: str, params: dict[str, str], body: bytes
     ) -> _Response:
-        if method == "OPTIONS":
-            return _Response(204, "", "text/plain")
-        if path == self.path:
-            return await self._graphql(method, params, body)
-        if path == "/":
-            if method != "GET":
-                return _error_response(405, "Method not allowed.")
-            return _Response(
-                200, playground_html(self.path), "text/html; charset=utf-8"
+        headers = {"content-type": "application/json"} if method == "POST" else {}
+        response = await self.handler.handle(
+            HTTPRequest(
+                method=method,
+                path=path,
+                headers=headers,
+                query_params=params,
+                body=body,
             )
-        if path == "/schema.graphql":
-            if method != "GET":
-                return _error_response(405, "Method not allowed.")
-            return _Response(
-                200, print_schema(self.schema), "text/plain; charset=utf-8"
-            )
-        if path == "/schema.json":
-            if method != "GET":
-                return _error_response(405, "Method not allowed.")
-            result = await execute(self.schema, INTROSPECTION_QUERY)
-            return _Response(200, json.dumps(result.formatted()))
-        return _error_response(404, f"Not found: {path}")
-
-    async def _graphql(
-        self, method: str, params: dict[str, str], body: bytes
-    ) -> _Response:
-        if method == "POST":
-            try:
-                payload = json.loads(body.decode() or "{}") if body else {}
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                return _error_response(400, "Request body is not valid JSON.")
-            if not isinstance(payload, dict):
-                return _error_response(400, "Request body must be a JSON object.")
-            query = payload.get("query")
-            variables = payload.get("variables")
-            operation = payload.get("operationName")
-        elif method == "GET":
-            query = params.get("query")
-            operation = params.get("operationName")
-            variables = None
-            if "variables" in params:
-                try:
-                    variables = json.loads(params["variables"])
-                except json.JSONDecodeError:
-                    return _error_response(400, "'variables' is not valid JSON.")
-        else:
-            return _error_response(405, "Method not allowed.")
-
-        if not query:
-            return _error_response(400, "Missing 'query'.")
-
-        result = await execute(
-            self.schema,
-            query,
-            variable_values=variables,
-            context=await self._make_context(),
-            operation_name=operation,
         )
-        return _Response(200, json.dumps(result.formatted()))
+        return _Response(
+            response.status,
+            response.body.decode("utf-8"),
+            response.headers.get("content-type", "application/json"),
+        )
 
 
 # --- socket layer ------------------------------------------------------------

@@ -1,0 +1,38 @@
+---
+title: GraphQL-over-HTTP contract
+description: Supported request formats, endpoint options, and adapter extension boundary.
+---
+
+The shared handler accepts GET query parameters and POST JSON bodies with
+`query`, `variables`, `operationName`, and `extensions`. POST supports
+`application/json` and `application/graphql-response+json`. Mutations and
+subscriptions require POST.
+
+Malformed transport input returns a structured `4xx` error. Once a GraphQL
+request is decoded, parse, validation, and resolver failures use the normal
+GraphQL `data` and `errors` result shape.
+
+GraphiQL, SDL, and introspection JSON are independently configurable:
+
+```python
+create_fastapi_router(
+    schema,
+    graphiql=True,
+    schema_path="/schema.graphql",
+    introspection_path="/schema.json",
+)
+```
+
+Disable these options in production when schema discovery is not intended. CORS,
+authentication, CSRF, rate limiting, and exception reporting belong to the host
+framework.
+
+## Extension boundary
+
+A third-party adapter converts its native request into `HTTPRequest`, awaits
+`GraphQLHTTPHandler.handle`, then converts `HTTPResponse` back into the native
+response. The adapter must pass the native request, application, and request state
+so FastQL can construct `HTTPContext` without importing that framework.
+
+The initial contract excludes WebSocket subscriptions, multipart uploads,
+batching, persisted queries, and incremental or streaming delivery.

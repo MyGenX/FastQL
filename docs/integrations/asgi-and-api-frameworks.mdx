@@ -1,0 +1,58 @@
+---
+title: ASGI, Starlette, and FastAPI
+description: Configure FastQL with async Python web applications.
+---
+
+## Generic ASGI
+
+`GraphQLASGI` is dependency-free and can run directly or be mounted by an ASGI
+router.
+
+```python
+from fastql.integrations import GraphQLASGI
+
+application = GraphQLASGI(
+    schema,
+    graphiql=True,
+    schema_path="/schema.graphql",
+)
+```
+
+The context's native request is an `ASGIRequest` containing `scope`, `receive`,
+and `send`. WebSocket scopes are closed because subscription transports are not
+part of the initial integration contract.
+
+## Starlette
+
+```python
+from starlette.applications import Starlette
+from fastql.integrations.starlette import create_starlette_router
+
+router = create_starlette_router(schema, graphiql=True)
+app = Starlette(routes=list(router.routes))
+```
+
+Mounting the router under a prefix composes all enabled routes with that prefix.
+Starlette middleware runs before FastQL and `HTTPContext.request` is the native
+Starlette `Request`.
+
+## FastAPI
+
+```python
+from fastapi import Depends, FastAPI
+from fastql.integrations.fastapi import create_fastapi_router
+
+router = create_fastapi_router(
+    schema,
+    dependencies=[Depends(require_user)],
+    tags=["GraphQL"],
+    include_in_schema=False,
+)
+
+app = FastAPI()
+app.include_router(router, prefix="/api")
+```
+
+FastAPI resolves router dependencies before GraphQL execution. Tags and
+`include_in_schema` control FastAPI's OpenAPI document without changing FastQL
+execution behavior.
