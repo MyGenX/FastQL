@@ -40,6 +40,7 @@ class Schema:
     directives: dict[str, DirectiveDefinition] = field(default_factory=dict)
     types: list[NamedType] = field(default_factory=list)
     config: SchemaConfig = field(default_factory=SchemaConfig)
+    extensions: list[Any] = field(default_factory=list)
 
     def __init__(
         self,
@@ -50,6 +51,7 @@ class Schema:
         directives: dict[str, DirectiveDefinition] | None = None,
         types: list[NamedType] | None = None,
         config: SchemaConfig | None = None,
+        extensions: list[Any] | None = None,
         registry: Any = None,
         _built: bool = False,
     ) -> None:
@@ -67,6 +69,7 @@ class Schema:
                 config=config or SchemaConfig(),
             )
             self.__dict__.update(compiled.__dict__)
+            self.extensions = list(extensions or [])
             return
         self.query = query
         self.mutation = mutation
@@ -74,6 +77,7 @@ class Schema:
         self.directives = directives or default_directives()
         self.types = list(types or [])
         self.config = config or SchemaConfig(auto_camel_case=False)
+        self.extensions = list(extensions or [])
         self._initialize_type_map()
 
     def _initialize_type_map(self) -> None:

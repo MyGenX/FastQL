@@ -29,6 +29,7 @@ from fastql.context import (
     provides,
     register_dependency,
 )
+from fastql.dataloader import DataLoader, DataLoaderError, get_loader
 from fastql.decorators import (
     Arg,
     Argument,
@@ -47,6 +48,7 @@ from fastql.decorators import (
 )
 from fastql.errors import GraphQLError, GraphQLSyntaxError, ValidationError
 from fastql.execution import ExecutionResult, execute
+from fastql.extensions import SchemaExtension
 from fastql.language import parse
 from fastql.registry import TypeRegistry, default_registry
 from fastql.schema_builder import SchemaBuildError, build_schema
@@ -85,12 +87,17 @@ __all__ = [
     "AppliedDirective",
     "BasePermission",
     "FieldExtension",
+    "SchemaExtension",
     # Context / DI
     "Context",
     "Info",
     "ResolveInfo",
     "register_dependency",
     "provides",
+    # DataLoader (request-scoped batch loading)
+    "DataLoader",
+    "DataLoaderError",
+    "get_loader",
     # Built-in scalars and wrappers
     "Int",
     "Float",

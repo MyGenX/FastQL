@@ -62,6 +62,7 @@ def build_schema(
     types: list[Any] | None = None,
     registry: DecoratorRegistry | None = None,
     config: SchemaConfig | None = None,
+    extensions: list[Any] | None = None,
 ) -> Schema:
     """Build a :class:`Schema` from decorated definitions.
 
@@ -73,7 +74,7 @@ def build_schema(
     selected_config = config or SchemaConfig()
     prepared = _prepare_registry(registry or default_registry, selected_config)
     return _SchemaBuilder(prepared, selected_config).build(
-        query, mutation, subscription, list(types or [])
+        query, mutation, subscription, list(types or []), list(extensions or [])
     )
 
 
@@ -93,7 +94,8 @@ class _SchemaBuilder:
         }
 
     def build(
-        self, query: Any, mutation: Any, subscription: Any, extra_types: list[Any]
+        self, query: Any, mutation: Any, subscription: Any, extra_types: list[Any],
+        extensions: list[Any] | None = None,
     ) -> Schema:
         query_root = self._root("query", query)
         if query_root is None:
@@ -118,6 +120,7 @@ class _SchemaBuilder:
             subscription=subscription_root,
             types=extra_ir,
             config=self.config,
+            extensions=list(extensions or []),
             _built=True,
         )
 

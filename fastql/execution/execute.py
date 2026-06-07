@@ -18,6 +18,12 @@ from typing import Any
 from fastql.context import Info, ResolveInfo, build_injection_plan
 from fastql.errors import GraphQLError, GraphQLSyntaxError
 from fastql.execution.collect_fields import collect_fields
+from fastql.extensions import (
+    collect_results,
+    has_resolve_override,
+    instantiate_extensions,
+    phase,
+)
 from fastql.execution.values import (
     coerce_argument_values,
     coerce_variable_values,
@@ -66,19 +72,37 @@ async def execute(
     operation_name: str | None = None,
     root_value: Any = None,
 ) -> ExecutionResult:
-    if isinstance(query, (str, Source)):
-        try:
-            document = parse(query)
-        except GraphQLSyntaxError as error:
-            return ExecutionResult(errors=[error], executed=False)
-    else:
-        document = query
+    extensions = instantiate_extensions(getattr(schema, "extensions", None))
+    async with phase(extensions, "on_operation"):
+        result = await _run_pipeline(
+            schema, query, variable_values, context,
+            operation_name, root_value, extensions,
+        )
+    if extensions:
+        extra = await collect_results(extensions)
+        if extra:
+            result.extensions = {**(result.extensions or {}), **extra}
+    return result
+
+
+async def _run_pipeline(
+    schema, query, variable_values, context, operation_name, root_value, extensions
+) -> ExecutionResult:
+    async with phase(extensions, "on_parse"):
+        if isinstance(query, (str, Source)):
+            try:
+                document = parse(query)
+            except GraphQLSyntaxError as error:
+                return ExecutionResult(errors=[error], executed=False)
+        else:
+            document = query
 
     operation, op_error = _get_operation(document, operation_name)
     if op_error is not None:
         return ExecutionResult(errors=[op_error], executed=False)
 
-    validation_errors = validate(schema, document)
+    async with phase(extensions, "on_validate"):
+        validation_errors = validate(schema, document)
     if validation_errors:
         return ExecutionResult(errors=list(validation_errors), executed=False)
 
@@ -89,11 +113,14 @@ async def execute(
     except GraphQLError as error:
         return ExecutionResult(errors=[error], executed=False)
 
-    executor = _Executor(
-        schema, document, coerced_variables, context, operation, root_value
-    )
-    data = await executor.execute_operation(operation)
-    return ExecutionResult(data=data, errors=executor.errors)
+    async with phase(extensions, "on_execute"):
+        executor = _Executor(
+            schema, document, coerced_variables, context, operation,
+            root_value, extensions,
+        )
+        data = await executor.execute_operation(operation)
+        result = ExecutionResult(data=data, errors=executor.errors)
+    return result
 
 
 def _get_operation(
@@ -118,7 +145,8 @@ def _get_operation(
 
 class _Executor:
     def __init__(
-        self, schema, document, variable_values, context, operation, root_value
+        self, schema, document, variable_values, context, operation, root_value,
+        extensions=(),
     ) -> None:
         self.schema = schema
         self.variable_values = variable_values
@@ -126,6 +154,9 @@ class _Executor:
         self.errors: list[GraphQLError] = []
         self.operation = operation
         self.root_value = root_value
+        self.resolve_extensions = [
+            ext for ext in extensions if has_resolve_override(ext)
+        ]
         self.root_instances: dict[type, Any] = {}
         self.dependency_values: dict[type, Any] = {}
         self.fragments = {
@@ -426,6 +457,25 @@ class _Executor:
                 return result
 
             next_ = wrapped
+
+        for schema_ext in reversed(self.resolve_extensions):
+            previous = next_
+
+            async def schema_wrapped(
+                current_source,
+                current_info,
+                _extension=schema_ext,
+                _next=previous,
+                **current_args,
+            ):
+                result = _extension.resolve(
+                    _next, current_source, current_info, **current_args
+                )
+                if inspect.isawaitable(result):
+                    result = await result
+                return result
+
+            next_ = schema_wrapped
         return await next_(resolution_source, info, **args)
 
     async def _invoke(self, resolver, source, args, info):
