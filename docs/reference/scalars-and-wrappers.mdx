@@ -1,0 +1,30 @@
+---
+title: Scalars and wrappers
+description: Reference for built-in scalar mappings and explicit type wrappers.
+---
+
+FastQL maps ordinary Python annotations to built-in GraphQL scalars:
+
+| Python | GraphQL |
+| --- | --- |
+| `int` | `Int` |
+| `float` | `Float` |
+| `str` | `String` |
+| `bool` | `Boolean` |
+
+`ID` is available as an explicit GraphQL scalar. `NonNull(type_)` and
+`ListType(type_)` are low-level wrappers used by the internal type model and advanced
+schema construction.
+
+In decorated Python definitions, prefer annotation syntax:
+
+```python
+required_name: str
+optional_name: str | None
+required_items: list[Item]
+optional_items: list[Item] | None
+```
+
+Use custom scalars for domain values that require explicit parsing and serialization.
+Scalar implementations must return GraphQL-compatible serialized output and raise
+clear errors for invalid input.

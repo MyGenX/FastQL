@@ -1,0 +1,24 @@
+---
+title: CLI
+description: Load and serve a FastQL schema from a Python module.
+---
+
+The CLI loads a schema target in `module:attribute` form.
+
+```bash
+python -m fastql serve examples.hello:schema \
+  --host 127.0.0.1 \
+  --port 7691 \
+  --path /graphql
+```
+
+Use `--context module:attribute` to supply a context factory. The factory can be
+synchronous or asynchronous and is called once per GraphQL request.
+
+```bash
+python -m fastql serve myapp.schema:schema \
+  --context myapp.context:create_context
+```
+
+Run `python -m fastql --help` for the current argument list. Import failures and
+missing attributes are reported before the server starts.

@@ -1,0 +1,26 @@
+---
+title: Errors and nullability
+description: Understand GraphQL errors, paths, and non-null propagation.
+---
+
+FastQL returns `ExecutionResult(data, errors, extensions, executed)`. Use
+`result.formatted()` to obtain the GraphQL response dictionary.
+
+Syntax, operation selection, validation, and variable coercion errors set
+`executed=False` and omit `data` from the formatted result. Resolver and completion
+errors happen during execution, include a response path, and preserve data from
+unaffected branches.
+
+When a non-null field produces null, the null propagates to the nearest nullable
+parent as required by GraphQL semantics.
+
+```python
+result = await execute(schema, query, variable_values={"id": "missing"})
+
+if result.errors:
+    for error in result.errors:
+        logger.warning(error.message, extra={"path": error.path})
+```
+
+Model nullability deliberately. Use `T | None` where absence is part of the API;
+use non-null output types when failure should invalidate the containing branch.

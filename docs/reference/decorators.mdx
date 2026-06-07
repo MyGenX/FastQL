@@ -1,0 +1,48 @@
+---
+title: Decorators and metadata
+description: Reference for schema decorators, Field, Arg, and directives.
+---
+
+## Class decorators
+
+`Type`, `Input`, `Interface`, `Query`, `Mutation`, and `Subscription` accept a class
+directly or can be called with metadata. Their shared options include GraphQL name,
+description, directives, and explicit field configuration where applicable.
+
+```python
+@Type
+class User: ...
+
+
+@Type(name="Account", description="A billable account.")
+class AccountModel: ...
+```
+
+`Enum`, `Union`, and `Scalar` use definitions appropriate to their GraphQL kind but
+register into the same type registry and compile into the same schema model.
+
+## Field
+
+`Field` works as an annotated attribute descriptor, method decorator, or callable
+resolver declaration. Supported metadata includes:
+
+- `name`, `description`, `deprecated` or `deprecation_reason`
+- `type` or `type_` for explicit GraphQL type control
+- `default` or `default_factory`
+- `arguments`, `directives`, `extensions`, and `permission_classes`
+
+## Arguments
+
+Use `Arg(...)` as a parameter default or `Argument(...)` with `typing.Annotated`.
+Argument metadata supports names, descriptions, deprecation, defaults, and directives.
+
+```python
+from typing import Annotated
+
+from fastql import Argument, Field
+
+
+@Field
+def user(self, id: Annotated[str, Argument(description="User identifier")]) -> User:
+    ...
+```

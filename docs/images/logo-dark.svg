@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="184" height="40" viewBox="0 0 184 40" role="img" aria-labelledby="title">
+  <title id="title">FastQL</title>
+  <rect width="40" height="40" rx="7" fill="#22C55E"/>
+  <path d="M11 10h18v5H17v5h10v5H17v7h-6V10Z" fill="#101713"/>
+  <circle cx="29" cy="29" r="3" fill="#F59E0B"/>
+  <text x="52" y="28" fill="#F4F7F5" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">FastQL</text>
+</svg>

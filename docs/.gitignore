@@ -1,0 +1,4 @@
+node_modules/
+.mintlify/
+playwright-report/
+test-results/

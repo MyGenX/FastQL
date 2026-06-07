@@ -1,0 +1,20 @@
+---
+title: Type system and schema compilation
+description: Understand registries, type references, and schema construction.
+---
+
+Decorators attach definition metadata to Python classes and register it in a
+`TypeRegistry`. The schema builder starts from operation roots and resolves fields,
+arguments, interfaces, union members, enum values, and scalar mappings.
+
+Annotation resolution handles built-in Python types, decorated classes, lists,
+optionals, forward references, and explicit FastQL wrappers. The compiler applies
+GraphQL names and nullability, then creates the corresponding internal named types.
+
+`Schema` builds a type map by traversing roots and additional named types. Duplicate
+GraphQL names that refer to different definitions are rejected. Reachable output and
+input references are collected recursively, including abstract type members.
+
+The compiled schema owns default directives, root type references, the complete type
+map, and schema configuration. SDL, introspection, validation, and execution all read
+from this object.

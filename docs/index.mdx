@@ -1,0 +1,64 @@
+---
+title: FastQL documentation
+description: Build and execute GraphQL services with Python-native schemas and one coherent API.
+mode: custom
+og:image: /images/og-fastql.png
+---
+
+<div className="fastql-hero">
+  <div className="fastql-hero__eyebrow">Python-native GraphQL</div>
+  <h1>FastQL</h1>
+  <p className="fastql-hero__lede">
+    Define schemas with Python annotations, apply explicit GraphQL metadata when it matters,
+    and run the same model through validation, execution, SDL, introspection, and local tooling.
+  </p>
+  <div className="fastql-actions">
+    <a className="fastql-action fastql-action--primary" href="/start/quickstart">Build your first schema</a>
+    <a className="fastql-action" href="/architecture/overview">Read the architecture</a>
+  </div>
+</div>
+
+<section className="fastql-section">
+  <h2>One schema model, end to end</h2>
+  <div className="fastql-grid">
+    <div className="fastql-feature">
+      <h3>Python-first definitions</h3>
+      <p>Use annotations for the common path and <code>Field</code> or <code>Arg</code> when GraphQL-specific control is required.</p>
+    </div>
+    <div className="fastql-feature">
+      <h3>Unified decorators</h3>
+      <p>Types, inputs, interfaces, operations, enums, unions, and scalars share one predictable metadata contract.</p>
+    </div>
+    <div className="fastql-feature">
+      <h3>Built-in execution</h3>
+      <p>Parse, validate, coerce, resolve, and serialize without handing the schema to a separate execution engine.</p>
+    </div>
+  </div>
+</section>
+
+<section className="fastql-section">
+  <h2>From source to response</h2>
+  <div className="fastql-architecture">
+    <div><strong>Define</strong><span>Decorators and Python types</span></div>
+    <div><strong>Compile</strong><span>Registry and GraphQL schema</span></div>
+    <div><strong>Execute</strong><span>Validation and resolvers</span></div>
+    <div><strong>Inspect</strong><span>SDL, introspection, playground</span></div>
+  </div>
+</section>
+
+<section className="fastql-section">
+  <h2>Inspect the running service</h2>
+  <p>The development server exposes the GraphQL endpoint, interactive playground, generated SDL, and introspection JSON.</p>
+  <div className="fastql-preview">
+    <img src="/images/playground.png" alt="FastQL GraphQL playground showing a hello query and JSON response" />
+  </div>
+</section>
+
+<section className="fastql-section">
+  <h2>Choose your route</h2>
+  <CardGroup cols={3}>
+    <Card title="Application developers" icon="code" href="/start/quickstart">Build a schema and run a query.</Card>
+    <Card title="Framework integrators" icon="blocks" href="/resolve/context-and-info">Connect context, dependencies, and policy.</Card>
+    <Card title="Contributors" icon="git-pull-request" href="/contribute/development">Work on the language and execution pipeline.</Card>
+  </CardGroup>
+</section>

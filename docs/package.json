@@ -1,0 +1,18 @@
+{
+  "name": "fastql-docs",
+  "private": true,
+  "engines": {
+    "node": ">=20.17.0"
+  },
+  "scripts": {
+    "dev": "mint dev",
+    "validate": "mint validate",
+    "links": "mint broken-links --check-anchors",
+    "a11y": "mint a11y",
+    "check": "npm run validate && npm run links && npm run a11y"
+  },
+  "devDependencies": {
+    "mint": "4.2.598",
+    "playwright": "1.60.0"
+  }
+}

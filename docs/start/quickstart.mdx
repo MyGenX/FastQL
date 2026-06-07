@@ -1,0 +1,71 @@
+---
+title: Quickstart
+description: Define a schema, execute a query, and inspect the result.
+---
+
+Create `app.py`:
+
+```python
+import asyncio
+
+from fastql import Field, Query, Type, build_schema, execute
+
+
+@Type
+class User:
+    id: str
+    name: str
+
+
+@Query
+class QueryRoot:
+    @Field
+    def greeting(self) -> str:
+        return "Hello from FastQL"
+
+    @Field
+    def user(self, id: str) -> User:
+        return User(id=id, name="Ada")
+
+
+schema = build_schema(query=QueryRoot)
+
+
+async def main():
+    result = await execute(
+        schema,
+        '{ greeting user(id: "1") { id name } }',
+    )
+    print(result.formatted())
+
+
+asyncio.run(main())
+```
+
+Run it:
+
+```bash
+python app.py
+```
+
+The result contains GraphQL-shaped data:
+
+```json
+{
+  "data": {
+    "greeting": "Hello from FastQL",
+    "user": {"id": "1", "name": "Ada"}
+  }
+}
+```
+
+`@Type` turns the annotated class into a GraphQL object type. `@Query` applies the
+same field discovery contract while marking the class as an operation root.
+`@Field` makes the method a resolver-backed field; its parameter becomes a GraphQL
+argument and its return annotation becomes the output type.
+
+The repository continuously executes this example from `docs/snippets/quickstart.py`.
+
+<Card title="Run the playground" icon="play" href="/tooling/dev-server">
+Serve the schema and explore it in a browser.
+</Card>

@@ -1,0 +1,22 @@
+---
+title: Validation and execution
+description: Trace operation selection, coercion, field collection, and completion.
+---
+
+`execute` is async-first and follows a defined sequence:
+
+1. Parse source into a document when needed.
+2. Select the requested operation.
+3. Validate the document against the schema.
+4. Coerce variables using GraphQL input rules.
+5. Collect fields across selections, fragments, aliases, and directives.
+6. Resolve sibling fields concurrently.
+7. Complete scalar, object, list, interface, and union values.
+8. Capture field errors and apply non-null propagation.
+
+Argument coercion happens before a resolver is called. Resolver injection plans
+separate GraphQL arguments from context, `Info`, and registered dependencies.
+Permissions run before extension wrappers and the resolver.
+
+The result preserves partial data where GraphQL nullability allows it. Pre-execution
+errors return `executed=False`; runtime errors remain attached to an executed response.

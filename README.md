@@ -7,6 +7,10 @@ and a **web-framework-agnostic core** — zero runtime dependencies, Python 3.11
 > Status: early development. The core engine (parse → build → validate → execute, with
 > dependency injection and introspection) is in place.
 
+**Documentation:** Start with the [FastQL documentation](docs/index.mdx), then use the
+[capability catalog](docs/specifications/capability-catalog.mdx) to trace documented
+behavior to its canonical OpenSpec requirements.
+
 ## Quickstart
 
 Define types and operations with decorators — field and argument types come from your
@@ -72,6 +76,9 @@ multiple globally decorated root classes.
 (`__schema`, `__type`, `__typename`) is built in.
 
 A runnable version of this lives in [`examples/hello.py`](examples/hello.py).
+
+The documentation quickstart and first-schema examples are also executed by the test
+suite from [`docs/snippets`](docs/snippets).
 
 ## Dev server & playground
 

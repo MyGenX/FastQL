@@ -1,0 +1,40 @@
+---
+title: Extensions and permissions
+description: Wrap field resolution and enforce declarative access policy.
+---
+
+Permissions run before resolver extensions and the resolver itself.
+
+```python
+from fastql import BasePermission, Field, FieldExtension, Query
+
+
+class IsAuthenticated(BasePermission):
+    message = "Authentication required"
+
+    def has_permission(self, source, info, **kwargs) -> bool:
+        return info.context.user_id is not None
+
+
+class TraceField(FieldExtension):
+    async def resolve(self, next_, source, info, **kwargs):
+        info.context.trace.append(info.field_name)
+        return await next_(source, info, **kwargs)
+
+
+@Query
+class QueryRoot:
+    @Field(
+        permission_classes=[IsAuthenticated],
+        extensions=[TraceField()],
+    )
+    def private_profile(self) -> Profile:
+        return load_profile()
+```
+
+`BasePermission.has_permission` may be synchronous or asynchronous. Return a false
+value to produce a field error using the permission's `message`. Extensions wrap
+the next stage in declared order and may inspect or transform its result.
+
+Keep authorization rules explicit and narrow. Context establishes identity;
+permissions decide whether the active field operation is allowed.

@@ -32,6 +32,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/fastql/fastql"
+Documentation = "https://github.com/fastql/fastql/tree/main/docs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["fastql"]

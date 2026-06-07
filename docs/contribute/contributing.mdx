@@ -1,0 +1,20 @@
+---
+title: Contributing
+description: Expectations for code, specifications, tests, and documentation.
+---
+
+Contributions should preserve the clarity of FastQL's public contracts.
+
+1. Describe behavioral work through OpenSpec before implementation.
+2. Keep public Python APIs consistent with GraphQL terminology and existing decorator
+   patterns.
+3. Add focused tests for new behavior and regression tests for fixes.
+4. Update user guides, references, architecture pages, and capability links when the
+   public surface changes.
+5. Run Python, documentation, and OpenSpec validation before requesting review.
+
+Avoid unrelated refactors in feature changes. New abstractions should remove real
+complexity or encode a stable concept already present in multiple parts of the system.
+
+Use the issue tracker for concrete defects and scoped feature discussions. Security
+issues should not be disclosed through a public issue.

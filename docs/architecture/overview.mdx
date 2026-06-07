@@ -1,0 +1,28 @@
+---
+title: Architecture overview
+description: See how FastQL turns Python definitions into GraphQL responses.
+---
+
+FastQL is organized as a staged pipeline with a shared internal schema model.
+
+```mermaid
+flowchart LR
+  A[Python definitions] --> B[Decorator metadata]
+  B --> C[Type registry]
+  C --> D[Schema builder]
+  D --> E[Schema and type map]
+  Q[GraphQL source] --> P[Lexer and parser]
+  P --> V[Validation]
+  E --> V
+  V --> X[Async executor]
+  E --> S[SDL and introspection]
+  X --> R[ExecutionResult]
+```
+
+Decorators collect user intent without constructing a parallel execution schema.
+The schema builder resolves Python annotations, names, fields, and abstract types
+into `fastql.types`. Validation, execution, SDL, and introspection all consume that
+compiled representation.
+
+This separation keeps the public declaration API ergonomic while preserving clear
+GraphQL language and runtime boundaries.

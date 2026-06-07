@@ -1,0 +1,30 @@
+---
+title: Product principles and scope
+description: The product decisions that guide FastQL development.
+---
+
+## Principles
+
+1. **GraphQL semantics come first.** Python ergonomics must compile to behavior that
+   remains legible in GraphQL terms.
+2. **Simple definitions should stay simple.** Annotations are the default path;
+   metadata is available without forcing boilerplate.
+3. **One concept should have one contract.** Type-like decorators share definition
+   behavior, and `Field` works consistently across object and operation classes.
+4. **The runtime should be inspectable.** Parsing, validation, schema compilation,
+   execution, SDL, and introspection remain explicit stages.
+5. **Project claims must match implemented capability.** Experimental and unsupported
+   features are documented as such.
+
+## Scope
+
+FastQL owns a Python schema definition API and an in-process GraphQL language and
+execution engine. It includes local tooling needed to inspect and exercise that model.
+
+Production HTTP framework integration, streaming subscription transport, federation,
+distributed tracing backends, and deployment infrastructure are not currently core
+capabilities. Those features should enter through explicit specifications rather than
+implicit compatibility claims.
+
+The canonical requirements live under
+[`openspec/specs`](https://github.com/fastql/fastql/tree/main/openspec/specs).

@@ -1,0 +1,33 @@
+---
+title: Resolvers
+description: Implement synchronous and asynchronous field resolution.
+---
+
+Resolvers can be regular or async methods. FastQL inspects their annotations to
+build GraphQL arguments and inject framework values.
+
+```python
+from fastql import Field, Query
+
+
+@Query
+class QueryRoot:
+    @Field
+    async def user(self, id: str) -> User | None:
+        return await repository.find_user(id)
+```
+
+At execution time, sibling fields are scheduled concurrently. Resolver exceptions
+become GraphQL errors with field paths; unaffected nullable branches continue.
+
+The resolver source is the parent object. Root classes are instantiated for the
+operation. Ordinary parameters become GraphQL arguments unless FastQL classifies
+them as `Info`, `Context`, or registered dependencies.
+
+Use explicit `Arg` metadata to rename, document, deprecate, or default an argument:
+
+```python
+@Field
+def users(self, limit: int = Arg(default=20, description="Maximum rows.")) -> list[User]:
+    return repository.list_users(limit=limit)
+```

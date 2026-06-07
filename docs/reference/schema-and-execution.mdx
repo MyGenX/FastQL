@@ -1,0 +1,42 @@
+---
+title: Schema and execution
+description: Reference for schema construction, validation, and execution.
+---
+
+## `build_schema`
+
+Compiles decorated query, mutation, and subscription roots into a `Schema`. It also
+accepts additional reachable types, a type registry, and `SchemaConfig`.
+
+```python
+schema = build_schema(
+    query=QueryRoot,
+    mutation=MutationRoot,
+    types=[AuditEvent],
+    config=SchemaConfig(auto_camel_case=True),
+)
+```
+
+`Schema(query=...)` is a convenient constructor that performs the same compilation
+when passed decorated Python classes.
+
+## `execute`
+
+```python
+result = await execute(
+    schema,
+    query,
+    variable_values={"id": "42"},
+    context=request_context,
+    operation_name="GetUser",
+)
+```
+
+The query may be a string, `Source`, or parsed `DocumentNode`. Execution parses when
+needed, selects an operation, validates, coerces variables, resolves fields, completes
+values, and returns `ExecutionResult`.
+
+## `validate` and `parse`
+
+Use `parse(source)` when an application benefits from retaining the GraphQL AST.
+Use `validate(schema, document)` to inspect validation errors without executing.

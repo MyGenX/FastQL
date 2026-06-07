@@ -1,0 +1,28 @@
+---
+title: Development setup
+description: Prepare a local FastQL checkout and run its verification suite.
+---
+
+FastQL uses Python 3.11+ and `uv` for the repository workflow.
+
+```bash
+git clone https://github.com/fastql/fastql.git
+cd fastql
+uv sync --all-extras
+uv run pytest
+```
+
+Run focused tests while working on a subsystem:
+
+```bash
+uv run pytest tests/test_schema_builder.py
+uv run pytest tests/test_execution.py
+```
+
+The package is organized around public decorators, an internal type system, schema
+compilation, the GraphQL language pipeline, validation, execution, and development
+tooling. Keep changes within those ownership boundaries unless the behavior genuinely
+crosses them.
+
+Behavioral changes should begin with or update an OpenSpec artifact. Tests should
+cover the externally observable contract rather than only implementation details.

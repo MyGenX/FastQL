@@ -1,0 +1,26 @@
+---
+title: Language pipeline
+description: Follow GraphQL source through lexing, parsing, and AST production.
+---
+
+The language package is independent of schema construction. `Source` tracks the
+query body and location data. The lexer emits GraphQL tokens; the recursive parser
+builds nodes from `fastql.language.ast`.
+
+```mermaid
+flowchart LR
+  A[Source text] --> B[Lexer]
+  B --> C[Tokens]
+  C --> D[Parser]
+  D --> E[DocumentNode]
+  E --> F[Validation and execution]
+  E --> G[Printer]
+```
+
+Syntax errors carry source locations and stop execution before schema validation.
+A parsed `DocumentNode` can be passed directly to `validate` or `execute`, avoiding
+re-parsing for applications that cache documents.
+
+The AST preserves executable definitions, fragments, directives, values, variables,
+and type references. Schema definition language output is produced from the compiled
+schema model rather than by round-tripping a user-provided SDL document.

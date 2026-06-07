@@ -1,0 +1,36 @@
+---
+title: Documentation workflow
+description: Run, validate, and update the Mintlify documentation project.
+---
+
+The Mintlify project is isolated under `docs/` and requires Node.js 20.17 or newer.
+
+```bash
+cd docs
+npm ci
+npm run dev
+```
+
+The local preview command prints the URL selected by Mint. Before submitting changes,
+run all documentation checks:
+
+```bash
+npm run validate
+npm run links
+npm run a11y
+```
+
+Repository tests also verify navigation completeness, frontmatter, runnable examples,
+and capability-catalog coverage:
+
+```bash
+uv run pytest tests/test_documentation.py
+```
+
+Add pages to `docs/docs.json`, keep public claims aligned with the canonical OpenSpec
+files, and include descriptive alt text for images. Custom landing-page styles belong
+in `docs/style.css`; technical content should use standard MDX components.
+
+For hosted deployment, create a Mintlify project connected to this repository, set
+the documentation directory to `docs`, and deploy the default branch. Deployment
+credentials and custom-domain configuration remain outside the repository.

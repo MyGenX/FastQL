@@ -1,0 +1,28 @@
+---
+title: Context API
+description: Reference for Context, Info, and dependency registration.
+---
+
+## `Context`
+
+`Context` is a marker base class for typed request state. Subclass it with a dataclass
+or regular class. The executor injects the active context into resolver parameters
+annotated with that type.
+
+## `Info[ContextType, RootType]`
+
+Resolver information includes:
+
+- `field_name`, `parent_type`, and response `path`
+- `schema`, parsed `operation`, and variable values
+- `context` and `root_value`
+
+`ResolveInfo` is an alias for `Info`.
+
+## Dependencies
+
+`register_dependency(type_, provider)` installs a provider in the default dependency
+registry. `@provides(type_)` is the decorator form. Providers receive context and
+can return values or awaitables. Values are cached per execution.
+
+Framework-injected parameters are excluded from the generated GraphQL argument map.

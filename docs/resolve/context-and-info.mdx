@@ -1,0 +1,38 @@
+---
+title: Context and Info
+description: Pass request state and inspect the active GraphQL field.
+---
+
+Pass request-scoped state through the `context` argument to `execute`.
+
+```python
+from dataclasses import dataclass
+
+from fastql import Context, Field, Info, Query, execute
+
+
+@dataclass
+class RequestContext(Context):
+    user_id: str | None
+    request_id: str
+
+
+@Query
+class QueryRoot:
+    @Field
+    def viewer(self, ctx: RequestContext, info: Info[RequestContext, object]) -> str | None:
+        assert info.context is ctx
+        return ctx.user_id
+
+
+result = await execute(schema, "{ viewer }", context=request_context)
+```
+
+Type annotations are the primary injection signal. A parameter typed as a `Context`
+subclass receives the context object regardless of its name. Parameters named
+`context` or `ctx` are also treated as context for compatibility. `Info` exposes
+the schema, field name, parent type, path, variables, operation, root value, and
+typed context.
+
+Keep authentication principals, request identifiers, loaders, and service handles
+on a context object created per request. Avoid mutable process-global request state.

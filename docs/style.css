@@ -1,0 +1,176 @@
+:root {
+  --fastql-ink: #17211b;
+  --fastql-muted: #5c6861;
+  --fastql-line: #dce4df;
+  --fastql-green: #15803d;
+  --fastql-green-dark: #11652f;
+  --fastql-amber: #f59e0b;
+  --fastql-surface: #f7faf8;
+}
+
+.fastql-hero {
+  min-height: min(72vh, 720px);
+  display: grid;
+  align-content: center;
+  padding: 5rem 0 3.5rem;
+  border-bottom: 1px solid var(--fastql-line);
+  background-image:
+    linear-gradient(var(--fastql-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--fastql-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+
+.fastql-hero__eyebrow {
+  color: var(--fastql-green-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.fastql-hero h1 {
+  max-width: 900px;
+  margin: 0.8rem 0 1rem;
+  color: var(--fastql-ink);
+  font-size: clamp(3.5rem, 8vw, 7rem);
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.fastql-hero__lede {
+  max-width: 720px;
+  color: var(--fastql-muted);
+  font-size: 1.24rem;
+  line-height: 1.65;
+}
+
+.fastql-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.fastql-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--fastql-ink);
+  border-radius: 6px;
+  color: var(--fastql-ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.fastql-action--primary {
+  border-color: var(--fastql-green);
+  background: var(--fastql-green);
+  color: white;
+}
+
+.fastql-section {
+  padding: 3.5rem 0;
+  border-bottom: 1px solid var(--fastql-line);
+}
+
+.fastql-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--fastql-line);
+  background: var(--fastql-line);
+}
+
+.fastql-feature {
+  min-width: 0;
+  padding: 1.4rem;
+  background: white;
+}
+
+.fastql-feature h3 {
+  margin: 0 0 0.55rem;
+  color: var(--fastql-ink);
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.fastql-feature p {
+  margin: 0;
+  color: var(--fastql-muted);
+  line-height: 1.6;
+}
+
+.fastql-architecture {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.fastql-architecture > div {
+  min-width: 0;
+  padding: 1rem;
+  border-top: 3px solid var(--fastql-green);
+  background: var(--fastql-surface);
+}
+
+.fastql-architecture strong,
+.fastql-architecture span {
+  display: block;
+}
+
+.fastql-architecture span {
+  margin-top: 0.35rem;
+  color: var(--fastql-muted);
+  font-size: 0.88rem;
+}
+
+.fastql-preview {
+  overflow: hidden;
+  border: 1px solid var(--fastql-line);
+  border-radius: 6px;
+  box-shadow: 0 18px 48px rgb(23 33 27 / 10%);
+}
+
+.fastql-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 760px) {
+  .fastql-hero {
+    min-height: 620px;
+    padding-top: 3rem;
+  }
+
+  .fastql-hero h1 {
+    font-size: 3.5rem;
+  }
+
+  .fastql-grid,
+  .fastql-architecture {
+    grid-template-columns: 1fr;
+  }
+}
+
+html.dark .fastql-hero,
+html.dark .fastql-feature,
+html.dark .fastql-architecture > div {
+  background-color: #101713;
+}
+
+html.dark {
+  --fastql-ink: #f4f7f5;
+  --fastql-muted: #b6c2ba;
+  --fastql-line: #334239;
+  --fastql-green-dark: #4ade80;
+  --fastql-surface: #151f19;
+}
+
+html.dark .fastql-hero h1,
+html.dark .fastql-feature h3,
+html.dark .fastql-action {
+  color: #f4f7f5;
+}

@@ -1,0 +1,33 @@
+---
+title: Dependencies
+description: Inject typed services into resolvers with registered providers.
+---
+
+Register a provider for a type, then annotate a resolver parameter with that type.
+
+```python
+from fastql import Field, Query, provides
+
+
+class UserRepository:
+    def get(self, id: str) -> User | None: ...
+
+
+@provides(UserRepository)
+def provide_users(context):
+    return context.user_repository
+
+
+@Query
+class QueryRoot:
+    @Field
+    def user(self, id: str, users: UserRepository) -> User | None:
+        return users.get(id)
+```
+
+`register_dependency(Type, provider)` is the imperative form. Providers receive
+the execution context, may return awaitables, and are resolved once per execution
+before reuse by matching resolver parameters.
+
+Dependency types are removed from the public GraphQL argument list. Prefer concrete,
+purpose-specific service types so classification remains unambiguous.

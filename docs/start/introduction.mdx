@@ -1,0 +1,28 @@
+---
+title: Introduction
+description: Understand FastQL's Python-native model and where it fits.
+---
+
+FastQL is a GraphQL framework that owns the full path from Python definitions to
+GraphQL execution. Decorated classes compile into an internal schema model used by
+validation, execution, SDL generation, introspection, and local development tools.
+
+## Design goals
+
+- **One definition model.** Object types, inputs, interfaces, operations, enums,
+  unions, and scalars use a consistent decorator contract.
+- **Progressive explicitness.** Python annotations cover ordinary fields;
+  `Field`, `Arg`, and `Annotated` add GraphQL-specific metadata when needed.
+- **Spec-oriented behavior.** The parser, validator, coercion system, and executor
+  are designed around GraphQL semantics rather than transport conventions.
+- **Inspectable internals.** Schema output and architecture documentation make the
+  compilation and execution stages visible.
+
+FastQL currently targets schema definition and in-process execution. Its bundled
+server is development tooling, not a production transport. See [Project status](/start/project-status)
+for explicit scope and limitations.
+
+<CardGroup cols={2}>
+  <Card title="Build a schema" icon="braces" href="/start/quickstart">Start with a complete executable example.</Card>
+  <Card title="Understand the model" icon="workflow" href="/architecture/overview">Trace definitions through execution.</Card>
+</CardGroup>

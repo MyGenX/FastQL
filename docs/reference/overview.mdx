@@ -1,0 +1,22 @@
+---
+title: API overview
+description: Find the public FastQL APIs by responsibility.
+---
+
+FastQL re-exports its primary public surface from `fastql`.
+
+| Area | Public APIs |
+| --- | --- |
+| Definitions | `Type`, `Input`, `Interface`, `Enum`, `Union`, `Scalar` |
+| Operations | `Query`, `Mutation`, `Subscription` |
+| Fields | `Field`, `Arg`, `Argument`, `AppliedDirective` |
+| Policy | `BasePermission`, `FieldExtension` |
+| Context | `Context`, `Info`, `ResolveInfo`, `register_dependency`, `provides` |
+| Schema | `Schema`, `SchemaConfig`, `build_schema`, `TypeRegistry`, `default_registry` |
+| Execution | `execute`, `ExecutionResult`, `validate`, `parse` |
+| Output | `print_schema` and introspection support |
+| Types | `Int`, `Float`, `String`, `Boolean`, `ID`, `NonNull`, `ListType` |
+| Development | `serve`, `start_server` |
+
+Prefer importing these names from `fastql`; internal modules may change without
+the same compatibility expectations.

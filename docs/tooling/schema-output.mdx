@@ -1,0 +1,28 @@
+---
+title: SDL and introspection
+description: Inspect the compiled schema as SDL or standard introspection data.
+---
+
+Use `print_schema` for deterministic schema definition language output:
+
+```python
+from fastql import print_schema
+
+print(print_schema(schema))
+```
+
+The development server publishes the same output at `/schema.graphql`. Its
+`/schema.json` route executes the built-in introspection query and returns a
+GraphQL response object.
+
+Introspection includes schema roots, named types, fields, arguments, input fields,
+interfaces, enum values, possible types, directives, deprecations, and nested type
+references.
+
+```bash
+curl http://127.0.0.1:7691/schema.graphql
+curl http://127.0.0.1:7691/schema.json
+```
+
+SDL and introspection are derived from the compiled `Schema`; they are not separate
+sources of truth.

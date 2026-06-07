@@ -1,0 +1,112 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "FastQL",
+  "description": "A Python-native GraphQL framework with a unified schema API and built-in execution engine.",
+  "colors": {
+    "primary": "#15803D",
+    "light": "#22C55E",
+    "dark": "#15803D"
+  },
+  "favicon": "/images/favicon.svg",
+  "logo": {
+    "light": "/images/logo-light.svg",
+    "dark": "/images/logo-dark.svg"
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Start",
+        "pages": [
+          "index",
+          "start/introduction",
+          "start/installation",
+          "start/quickstart",
+          "start/first-schema",
+          "start/project-status"
+        ]
+      },
+      {
+        "group": "Build schemas",
+        "pages": [
+          "build/types-and-fields",
+          "build/inputs-and-abstract-types",
+          "build/operations-and-schema",
+          "build/naming-and-configuration"
+        ]
+      },
+      {
+        "group": "Resolve data",
+        "pages": [
+          "resolve/resolvers",
+          "resolve/context-and-info",
+          "resolve/dependencies",
+          "resolve/extensions-and-permissions",
+          "resolve/errors-and-nullability"
+        ]
+      },
+      {
+        "group": "Tooling",
+        "pages": [
+          "tooling/dev-server",
+          "tooling/cli",
+          "tooling/schema-output"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/overview",
+          "reference/decorators",
+          "reference/schema-and-execution",
+          "reference/context",
+          "reference/scalars-and-wrappers"
+        ]
+      },
+      {
+        "group": "Architecture",
+        "pages": [
+          "architecture/overview",
+          "architecture/language-pipeline",
+          "architecture/type-system",
+          "architecture/validation-and-execution"
+        ]
+      },
+      {
+        "group": "Specifications",
+        "pages": [
+          "specifications/product-principles",
+          "specifications/capability-catalog"
+        ]
+      },
+      {
+        "group": "Contribute",
+        "pages": [
+          "contribute/development",
+          "contribute/documentation",
+          "contribute/contributing"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/fastql/fastql"
+      }
+    ],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/fastql/fastql"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/fastql/fastql"
+    }
+  }
+}

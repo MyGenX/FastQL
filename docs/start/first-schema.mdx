@@ -1,0 +1,58 @@
+---
+title: First schema
+description: Add names, descriptions, argument metadata, and schema configuration.
+---
+
+Python annotations define structure. Metadata objects refine the GraphQL contract.
+
+```python
+from fastql import Arg, Field, Query, SchemaConfig, Type, build_schema
+
+
+@Type(description="A product available in the catalog.")
+class Product:
+    sku: str
+    display_name: str = Field(
+        name="name",
+        description="Customer-facing name.",
+    )
+
+
+@Query(name="Query")
+class CatalogQuery:
+    @Field(description="Look up one product by SKU.")
+    def product(
+        self,
+        sku: str = Arg(description="Stable product identifier."),
+    ) -> Product:
+        return Product(sku=sku, display_name="Mechanical keyboard")
+
+
+schema = build_schema(
+    query=CatalogQuery,
+    config=SchemaConfig(auto_camel_case=True),
+)
+```
+
+This compiles to the following public shape:
+
+```graphql
+"A product available in the catalog."
+type Product {
+  sku: String!
+  "Customer-facing name."
+  name: String!
+}
+
+type Query {
+  "Look up one product by SKU."
+  product(
+    "Stable product identifier."
+    sku: String!
+  ): Product!
+}
+```
+
+Use explicit names when they are part of an established API. Use automatic camel
+case when the GraphQL API should follow common naming conventions while Python
+stays idiomatic.

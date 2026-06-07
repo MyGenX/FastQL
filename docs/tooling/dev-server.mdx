@@ -1,0 +1,28 @@
+---
+title: Development server
+description: Run a schema locally with the playground and schema endpoints.
+---
+
+The bundled async HTTP server is a dependency-free development convenience.
+
+```bash
+python -m fastql serve examples.hello:schema
+```
+
+By default it listens on `http://127.0.0.1:7691` and exposes:
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Interactive GraphQL playground |
+| `/graphql` | GET and POST GraphQL execution |
+| `/schema.graphql` | Generated schema definition language |
+| `/schema.json` | Introspection result as JSON |
+
+The GraphQL POST body accepts `query`, `variables`, and `operationName`. A GET
+request accepts equivalent query-string parameters.
+
+<Warning>
+The development server has no TLS, authentication, keep-alive, chunked transfer,
+or production hardening. Put FastQL execution behind an application framework or
+transport designed for production use.
+</Warning>

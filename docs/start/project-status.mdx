@@ -1,0 +1,34 @@
+---
+title: Project status
+description: Current FastQL capabilities, boundaries, and maturity.
+---
+
+FastQL is an early-stage framework with a working Python schema API, GraphQL
+language pipeline, validation layer, async executor, introspection, SDL printer,
+and local development server.
+
+## Implemented
+
+- Object, input, interface, enum, union, and custom scalar definitions
+- Query, mutation, and subscription root metadata
+- Python annotation and explicit `Field` declaration styles
+- Arguments, defaults, descriptions, deprecations, and directives
+- Parsing, validation, variable coercion, field collection, and async execution
+- Context injection, dependency providers, field extensions, and permissions
+- Introspection, SDL output, CLI serving, and a browser playground
+
+## Current boundaries
+
+- The bundled HTTP server is for local development only. It does not provide TLS,
+  authentication, connection reuse, or production hardening.
+- Subscription fields can be represented in the schema, but a streaming subscription
+  transport and event execution lifecycle are not implemented.
+- Federation, schema stitching, persisted operations, and production observability
+  integrations are outside the current capability set.
+- Compatibility should be evaluated against the repository's tests and
+  [canonical specifications](/specifications/capability-catalog), not inferred from
+  another framework's API.
+
+<Warning>
+Do not expose the development server directly to untrusted networks.
+</Warning>
