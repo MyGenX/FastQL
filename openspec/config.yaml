@@ -1,0 +1,46 @@
+schema: spec-driven
+
+# Project context (shown to AI when creating artifacts).
+context: |
+  Project: FastQL — a code-first, decorator-driven GraphQL framework for Python.
+
+  Tech stack: Python 3.11+, zero runtime dependencies. The GraphQL engine is
+  hand-built (lexer -> parser -> validator -> async executor). Dev tooling:
+  pytest + pytest-asyncio (asyncio_mode=auto); packaged via hatchling.
+
+  Layout: a web-framework-agnostic core package `fastql/`:
+    - language/    Source -> lexer -> parser -> AST (+ printer)
+    - types/       type-system IR: definitions, wrappers (NonNull/ListType),
+                   built-in scalars (Int/Float/String/Boolean/ID), Schema
+    - decorators/  authoring surface + registry
+    - validation/  query-vs-schema rules
+    - execution/   collect_fields, value coercion, async execute
+    - registry.py, schema_builder.py, context.py, introspection.py, errors.py
+
+  Authoring: decorators @Type/@Input/@Interface/@Enum/@Union/@Scalar/
+  @Query/@Mutation/@Subscription/@Field. Field and argument types are inferred
+  from Python type hints (bare hint -> NonNull, `X | None` -> nullable,
+  `list[X]` -> List, string/forward refs -> resolved at build time), with a
+  Field(...) descriptor for overrides (name/description/deprecation/type).
+
+  Execution: async-first executor; resolvers are plain functions (no base class).
+  Signature-based dependency injection binds parameters by role — GraphQL
+  arguments by name; the parent/source object; ResolveInfo and Context (and
+  registered dependency types) by type. Sync and async resolvers interoperate.
+
+  Conventions:
+    - Spec-faithful GraphQL errors: {message, locations, path}; partial data with
+      null propagation to the nearest nullable parent.
+    - The core has NO HTTP/transport and imports no web framework. Transports
+      (e.g. the dev-server-playground change, future FastAPI/Django/ASGI adapters)
+      are separate changes that consume build_schema()/execute().
+    - Introspection (__schema/__type/__typename) is built in.
+
+# Per-artifact rules (applied when generating artifacts).
+rules:
+  proposal:
+    - Always include an explicit Non-goals / out-of-scope statement.
+    - Keep the core web-framework-agnostic; transports belong in separate changes.
+  tasks:
+    - Group tasks into numbered phases, each with its own tests.
+    - Every capability change ships with pytest coverage of its spec scenarios.

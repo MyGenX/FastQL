@@ -1,0 +1,304 @@
+"""A minimal, dependency-free async dev server for a FastQL schema.
+
+Built on ``asyncio.start_server`` with a small hand-rolled HTTP/1.1 handler
+(request line + headers + ``Content-Length`` body, ``Connection: close`` per
+response). It is a developer convenience for trying a schema in the browser —
+not a production server (no TLS, auth, keep-alive, or chunked transfer).
+
+Routes:
+    POST/GET  {path}            execute a GraphQL request -> {data, errors}
+    GET       /                 the GraphiQL IDE
+    GET       /schema.graphql   the schema as SDL (text/plain)
+    GET       /schema.json      the schema's introspection result (JSON)
+"""
+
+from __future__ import annotations
+
+import asyncio
+import inspect
+import json
+from dataclasses import dataclass
+from typing import Any, Callable
+from urllib.parse import parse_qs, urlsplit
+
+from fastql.execution import execute
+from fastql.playground import playground_html
+from fastql.sdl import print_schema
+
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 7691
+DEFAULT_PATH = "/graphql"
+
+_REASONS = {
+    200: "OK",
+    204: "No Content",
+    400: "Bad Request",
+    404: "Not Found",
+    405: "Method Not Allowed",
+    500: "Internal Server Error",
+}
+
+INTROSPECTION_QUERY = """
+query IntrospectionQuery {
+  __schema {
+    queryType { name }
+    mutationType { name }
+    subscriptionType { name }
+    types {
+      kind
+      name
+      description
+      fields(includeDeprecated: true) {
+        name
+        args { name type { ...TypeRef } }
+        type { ...TypeRef }
+        isDeprecated
+        deprecationReason
+      }
+      inputFields { name type { ...TypeRef } }
+      interfaces { ...TypeRef }
+      enumValues(includeDeprecated: true) {
+        name
+        isDeprecated
+        deprecationReason
+      }
+      possibleTypes { ...TypeRef }
+    }
+    directives { name locations args { name type { ...TypeRef } } }
+  }
+}
+
+fragment TypeRef on __Type {
+  kind
+  name
+  ofType { kind name ofType { kind name ofType { kind name } } }
+}
+"""
+
+
+@dataclass
+class _Response:
+    status: int
+    body: str
+    content_type: str = "application/json"
+
+
+def _json(status: int, payload: Any) -> _Response:
+    return _Response(status, json.dumps(payload))
+
+
+def _error_response(status: int, message: str) -> _Response:
+    return _json(status, {"errors": [{"message": message}]})
+
+
+class _Dispatcher:
+    """Routes a parsed request to a response. Independently unit-testable."""
+
+    def __init__(
+        self,
+        schema: Any,
+        path: str = DEFAULT_PATH,
+        context_factory: Callable[[], Any] | None = None,
+    ) -> None:
+        self.schema = schema
+        self.path = path
+        self.context_factory = context_factory
+
+    async def _make_context(self) -> Any:
+        if self.context_factory is None:
+            return None
+        context = self.context_factory()
+        if inspect.isawaitable(context):
+            context = await context
+        return context
+
+    async def dispatch(
+        self, method: str, path: str, params: dict[str, str], body: bytes
+    ) -> _Response:
+        if method == "OPTIONS":
+            return _Response(204, "", "text/plain")
+        if path == self.path:
+            return await self._graphql(method, params, body)
+        if path == "/":
+            if method != "GET":
+                return _error_response(405, "Method not allowed.")
+            return _Response(
+                200, playground_html(self.path), "text/html; charset=utf-8"
+            )
+        if path == "/schema.graphql":
+            if method != "GET":
+                return _error_response(405, "Method not allowed.")
+            return _Response(
+                200, print_schema(self.schema), "text/plain; charset=utf-8"
+            )
+        if path == "/schema.json":
+            if method != "GET":
+                return _error_response(405, "Method not allowed.")
+            result = await execute(self.schema, INTROSPECTION_QUERY)
+            return _Response(200, json.dumps(result.formatted()))
+        return _error_response(404, f"Not found: {path}")
+
+    async def _graphql(
+        self, method: str, params: dict[str, str], body: bytes
+    ) -> _Response:
+        if method == "POST":
+            try:
+                payload = json.loads(body.decode() or "{}") if body else {}
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return _error_response(400, "Request body is not valid JSON.")
+            if not isinstance(payload, dict):
+                return _error_response(400, "Request body must be a JSON object.")
+            query = payload.get("query")
+            variables = payload.get("variables")
+            operation = payload.get("operationName")
+        elif method == "GET":
+            query = params.get("query")
+            operation = params.get("operationName")
+            variables = None
+            if "variables" in params:
+                try:
+                    variables = json.loads(params["variables"])
+                except json.JSONDecodeError:
+                    return _error_response(400, "'variables' is not valid JSON.")
+        else:
+            return _error_response(405, "Method not allowed.")
+
+        if not query:
+            return _error_response(400, "Missing 'query'.")
+
+        result = await execute(
+            self.schema,
+            query,
+            variable_values=variables,
+            context=await self._make_context(),
+            operation_name=operation,
+        )
+        return _Response(200, json.dumps(result.formatted()))
+
+
+# --- socket layer ------------------------------------------------------------
+
+
+async def _read_request(reader: asyncio.StreamReader):
+    request_line = await reader.readline()
+    if not request_line:
+        return None
+    try:
+        method, target, _ = request_line.decode("latin-1").split(" ", 2)
+    except ValueError:
+        return None
+    headers: dict[str, str] = {}
+    while True:
+        line = await reader.readline()
+        if line in (b"\r\n", b"\n", b""):
+            break
+        key, _, value = line.decode("latin-1").partition(":")
+        headers[key.strip().lower()] = value.strip()
+    body = b""
+    length = int(headers.get("content-length", "0") or "0")
+    if length:
+        body = await reader.readexactly(length)
+    return method, target, headers, body
+
+
+def _write_response(writer: asyncio.StreamWriter, response: _Response) -> None:
+    body = response.body.encode("utf-8")
+    head = f"HTTP/1.1 {response.status} {_REASONS.get(response.status, '')}\r\n"
+    headers = {
+        "Content-Type": response.content_type,
+        "Content-Length": str(len(body)),
+        "Connection": "close",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
+    head += "".join(f"{k}: {v}\r\n" for k, v in headers.items()) + "\r\n"
+    writer.write(head.encode("latin-1") + body)
+
+
+async def _handle(reader, writer, dispatcher: _Dispatcher) -> None:
+    try:
+        request = await _read_request(reader)
+        if request is None:
+            return
+        method, target, _headers, body = request
+        split = urlsplit(target)
+        params = {k: v[0] for k, v in parse_qs(split.query).items()}
+        response = await dispatcher.dispatch(method, split.path, params, body)
+        _write_response(writer, response)
+        await writer.drain()
+    except Exception as error:  # never crash the connection loop
+        try:
+            _write_response(writer, _error_response(500, str(error)))
+            await writer.drain()
+        except Exception:
+            pass
+    finally:
+        try:
+            writer.close()
+        except Exception:
+            pass
+
+
+async def start_server(
+    schema: Any,
+    *,
+    host: str = DEFAULT_HOST,
+    port: int = DEFAULT_PORT,
+    path: str = DEFAULT_PATH,
+    context_factory: Callable[[], Any] | None = None,
+) -> asyncio.AbstractServer:
+    """Start the dev server and return the running ``asyncio`` server object."""
+    dispatcher = _Dispatcher(schema, path, context_factory)
+
+    async def handler(reader, writer):
+        await _handle(reader, writer, dispatcher)
+
+    return await asyncio.start_server(handler, host, port)
+
+
+def _print_banner(host: str, port: int, path: str) -> None:
+    base = f"http://{host}:{port}"
+    print(
+        f"FastQL dev server on {base}\n"
+        f"  GraphiQL : {base}/\n"
+        f"  GraphQL  : {base}{path}\n"
+        f"  SDL      : {base}/schema.graphql\n"
+        f"  Schema   : {base}/schema.json\n"
+        "Press Ctrl-C to stop."
+    )
+
+
+def serve(
+    schema: Any,
+    host: str = DEFAULT_HOST,
+    port: int = DEFAULT_PORT,
+    path: str = DEFAULT_PATH,
+    context: Any = None,
+    context_factory: Callable[[], Any] | None = None,
+) -> None:
+    """Run the dev server (blocking) until interrupted with Ctrl-C.
+
+    Supply ``context`` for a fixed per-request context value, or
+    ``context_factory`` (a zero-arg callable, optionally async) to build a fresh
+    context for each request. Resolvers receive it via their ``Context`` parameter.
+    """
+    if context_factory is None and context is not None:
+        context_factory = lambda: context  # noqa: E731
+
+    async def _run() -> None:
+        server = await start_server(
+            schema, host=host, port=port, path=path, context_factory=context_factory
+        )
+        bound = server.sockets[0].getsockname()
+        _print_banner(bound[0], bound[1], path)
+        async with server:
+            await server.serve_forever()
+
+    try:
+        asyncio.run(_run())
+    except KeyboardInterrupt:
+        print("\nFastQL dev server stopped.")
+
+
+__all__ = ["serve", "start_server"]
