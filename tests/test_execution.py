@@ -2,6 +2,7 @@
 
 import pytest
 
+from fastql.errors import GraphQLError
 from fastql.execution import execute
 from fastql.types import (
     Argument,
@@ -191,3 +192,75 @@ async def test_list_field_resolves_each_item():
     )
     result = await execute(Schema(query), "{ nums }")
     assert result.data == {"nums": [1, 2, 3]}
+
+
+# -- error extensions ---------------------------------------------------------
+
+
+async def test_error_extensions_are_surfaced():
+    def boom():
+        raise GraphQLError("nope", extensions={"code": "FORBIDDEN"})
+
+    query = ObjectType("Query", fields={"x": Field(String, resolver=boom)})
+    result = await execute(Schema(query), "{ x }")
+
+    formatted = result.errors[0].formatted()
+    assert formatted["message"] == "nope"
+    assert formatted["extensions"] == {"code": "FORBIDDEN"}
+
+
+async def test_error_without_extensions_omits_key():
+    def boom():
+        raise GraphQLError("nope")
+
+    query = ObjectType("Query", fields={"x": Field(String, resolver=boom)})
+    result = await execute(Schema(query), "{ x }")
+
+    assert "extensions" not in result.errors[0].formatted()
+
+
+# -- error masking ------------------------------------------------------------
+
+
+async def test_unexpected_error_masked_when_enabled():
+    def boom():
+        raise RuntimeError("secret db dsn leaked")
+
+    query = ObjectType("Query", fields={"x": Field(String, resolver=boom)})
+    result = await execute(Schema(query), "{ x }", mask_errors=True)
+
+    error = result.errors[0]
+    assert error.message == "Unexpected error."
+    # The original exception is preserved internally for logging.
+    assert isinstance(error.original_error, RuntimeError)
+    assert "secret db dsn" in str(error.original_error)
+
+
+async def test_custom_mask_message():
+    def boom():
+        raise RuntimeError("boom")
+
+    query = ObjectType("Query", fields={"x": Field(String, resolver=boom)})
+    result = await execute(
+        Schema(query), "{ x }", mask_errors=True, mask_message="Server error"
+    )
+    assert result.errors[0].message == "Server error"
+
+
+async def test_unexpected_error_not_masked_by_default():
+    def boom():
+        raise RuntimeError("raw message")
+
+    query = ObjectType("Query", fields={"x": Field(String, resolver=boom)})
+    result = await execute(Schema(query), "{ x }")
+    assert "raw message" in result.errors[0].message
+
+
+async def test_explicit_graphql_error_not_masked():
+    def boom():
+        raise GraphQLError("client-facing reason")
+
+    query = ObjectType("Query", fields={"x": Field(String, resolver=boom)})
+    result = await execute(Schema(query), "{ x }", mask_errors=True)
+    # Explicit GraphQLError passes through regardless of the masking policy.
+    assert result.errors[0].message == "client-facing reason"

@@ -29,12 +29,14 @@ class GraphQLError(Exception):
         locations: Sequence["SourceLocation"] | None = None,
         path: Sequence[str | int] | None = None,
         original_error: BaseException | None = None,
+        extensions: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
         self.locations: list["SourceLocation"] = list(locations) if locations else []
         self.path: list[str | int] | None = list(path) if path is not None else None
         self.original_error = original_error
+        self.extensions: dict[str, Any] | None = extensions
 
     def formatted(self) -> dict[str, Any]:
         """Return the GraphQL response representation of this error."""
@@ -45,6 +47,8 @@ class GraphQLError(Exception):
             ]
         if self.path is not None:
             out["path"] = list(self.path)
+        if self.extensions:
+            out["extensions"] = self.extensions
         return out
 
     def __str__(self) -> str:  # pragma: no cover - trivial

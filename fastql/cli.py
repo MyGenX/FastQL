@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import importlib
+import json
 import sys
 from typing import Any
 
 from fastql.server import DEFAULT_HOST, DEFAULT_PORT, serve
+from fastql.types.schema import Schema
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -28,6 +31,26 @@ def _build_parser() -> argparse.ArgumentParser:
             "Dotted path to a per-request context value or zero-arg factory, "
             "e.g. 'myapp:make_context'."
         ),
+    )
+
+    export_parser = sub.add_parser(
+        "export-schema", help="Write a schema's SDL or introspection JSON."
+    )
+    export_parser.add_argument(
+        "target",
+        help="Dotted path to the schema object, e.g. 'myapp.schema:schema'.",
+    )
+    export_parser.add_argument(
+        "--output",
+        "-o",
+        default=None,
+        help="File to write to. Writes to stdout when omitted.",
+    )
+    export_parser.add_argument(
+        "--format",
+        choices=("sdl", "json"),
+        default="sdl",
+        help="Output format: 'sdl' (default) or 'json' (introspection result).",
     )
     return parser
 
@@ -52,6 +75,38 @@ def _load_schema(target: str) -> Any:
         raise SystemExit(f"Module {module_name!r} has no attribute {attr!r}.")
 
 
+def _render_schema(schema: Any, fmt: str) -> str:
+    """Render ``schema`` as SDL or as an introspection-result JSON document."""
+    if not isinstance(schema, Schema):
+        raise SystemExit(
+            f"Loaded object is not a fastql Schema (got {type(schema).__name__})."
+        )
+    if fmt == "json":
+        from fastql.execution import execute
+        from fastql.integrations.http import INTROSPECTION_QUERY
+
+        result = asyncio.run(execute(schema, INTROSPECTION_QUERY))
+        if result.errors:
+            raise SystemExit(
+                f"Introspection failed: {result.errors[0].message}"
+            )
+        return json.dumps(result.data, indent=2)
+
+    from fastql.sdl import print_schema
+
+    return print_schema(schema)
+
+
+def _export_schema(target: str, output: str | None, fmt: str) -> None:
+    schema = _load_schema(target)
+    rendered = _render_schema(schema, fmt)
+    if output:
+        with open(output, "w", encoding="utf-8") as handle:
+            handle.write(rendered + ("\n" if not rendered.endswith("\n") else ""))
+    else:
+        print(rendered)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -67,6 +122,8 @@ def main(argv: list[str] | None = None) -> None:
             port=args.port,
             context_factory=context_factory,
         )
+    elif args.command == "export-schema":
+        _export_schema(args.target, args.output, args.format)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -63,6 +63,10 @@ class _NullBubble(Exception):
 
 _BUBBLE = object()
 
+#: Client-facing message substituted for unexpected resolver errors when masking
+#: is enabled. The original exception is preserved on ``GraphQLError.original_error``.
+_DEFAULT_MASK_MESSAGE = "Unexpected error."
+
 
 async def execute(
     schema: Any,
@@ -71,12 +75,16 @@ async def execute(
     context: Any = None,
     operation_name: str | None = None,
     root_value: Any = None,
+    *,
+    mask_errors: bool = False,
+    mask_message: str = _DEFAULT_MASK_MESSAGE,
 ) -> ExecutionResult:
     extensions = instantiate_extensions(getattr(schema, "extensions", None))
     async with phase(extensions, "on_operation"):
         result = await _run_pipeline(
             schema, query, variable_values, context,
             operation_name, root_value, extensions,
+            mask_errors, mask_message,
         )
     if extensions:
         extra = await collect_results(extensions)
@@ -86,7 +94,8 @@ async def execute(
 
 
 async def _run_pipeline(
-    schema, query, variable_values, context, operation_name, root_value, extensions
+    schema, query, variable_values, context, operation_name, root_value, extensions,
+    mask_errors=False, mask_message=_DEFAULT_MASK_MESSAGE,
 ) -> ExecutionResult:
     async with phase(extensions, "on_parse"):
         if isinstance(query, (str, Source)):
@@ -116,11 +125,71 @@ async def _run_pipeline(
     async with phase(extensions, "on_execute"):
         executor = _Executor(
             schema, document, coerced_variables, context, operation,
-            root_value, extensions,
+            root_value, extensions, mask_errors, mask_message,
         )
         data = await executor.execute_operation(operation)
         result = ExecutionResult(data=data, errors=executor.errors)
     return result
+
+
+async def subscribe(
+    schema: Any,
+    query: str | Source | ast.DocumentNode,
+    variable_values: dict[str, Any] | None = None,
+    context: Any = None,
+    operation_name: str | None = None,
+    root_value: Any = None,
+    *,
+    mask_errors: bool = False,
+    mask_message: str = _DEFAULT_MASK_MESSAGE,
+):
+    """Run a subscription, returning a stream of results or an initial error.
+
+    On success returns an async iterator yielding one :class:`ExecutionResult`
+    per source event. If the document is invalid, is not a subscription, or the
+    root resolver fails before producing a stream, a single ``ExecutionResult``
+    (with ``executed=False``) is returned instead.
+    """
+    if isinstance(query, (str, Source)):
+        try:
+            document = parse(query)
+        except GraphQLSyntaxError as error:
+            return ExecutionResult(errors=[error], executed=False)
+    else:
+        document = query
+
+    operation, op_error = _get_operation(document, operation_name)
+    if op_error is not None:
+        return ExecutionResult(errors=[op_error], executed=False)
+
+    if operation.operation != "subscription":
+        return ExecutionResult(
+            errors=[
+                GraphQLError(
+                    "subscribe() requires a subscription operation; "
+                    "use execute() for queries and mutations."
+                )
+            ],
+            executed=False,
+        )
+
+    validation_errors = validate(schema, document)
+    if validation_errors:
+        return ExecutionResult(errors=list(validation_errors), executed=False)
+
+    try:
+        coerced_variables = coerce_variable_values(
+            schema, operation, variable_values or {}
+        )
+    except GraphQLError as error:
+        return ExecutionResult(errors=[error], executed=False)
+
+    extensions = instantiate_extensions(getattr(schema, "extensions", None))
+    executor = _Executor(
+        schema, document, coerced_variables, context, operation,
+        root_value, extensions, mask_errors, mask_message,
+    )
+    return await executor.create_source_event_stream(operation)
 
 
 def _get_operation(
@@ -146,7 +215,7 @@ def _get_operation(
 class _Executor:
     def __init__(
         self, schema, document, variable_values, context, operation, root_value,
-        extensions=(),
+        extensions=(), mask_errors=False, mask_message=_DEFAULT_MASK_MESSAGE,
     ) -> None:
         self.schema = schema
         self.variable_values = variable_values
@@ -154,6 +223,8 @@ class _Executor:
         self.errors: list[GraphQLError] = []
         self.operation = operation
         self.root_value = root_value
+        self.mask_errors = mask_errors
+        self.mask_message = mask_message
         self.resolve_extensions = [
             ext for ext in extensions if has_resolve_override(ext)
         ]
@@ -164,6 +235,18 @@ class _Executor:
             for d in document.definitions
             if isinstance(d, ast.FragmentDefinitionNode)
         }
+
+    def _graphql_error(self, error: BaseException) -> GraphQLError:
+        """Wrap an arbitrary exception, masking unexpected errors when enabled.
+
+        Explicit ``GraphQLError`` instances pass through unchanged regardless of
+        the masking policy; the original exception is always preserved on
+        ``original_error`` for logging.
+        """
+        if isinstance(error, GraphQLError):
+            return error
+        message = self.mask_message if self.mask_errors else str(error)
+        return GraphQLError(message, original_error=error)
 
     async def execute_operation(self, operation: ast.OperationDefinitionNode) -> Any:
         root_type = self._root_type(operation.operation)
@@ -192,6 +275,143 @@ class _Executor:
             "mutation": self.schema.mutation,
             "subscription": self.schema.subscription,
         }.get(operation)
+
+    # -- subscriptions --------------------------------------------------------
+
+    async def create_source_event_stream(self, operation):
+        """Resolve the single root field to a source stream and map each event.
+
+        Returns an async iterator of :class:`ExecutionResult`, or a single
+        ``ExecutionResult`` (``executed=False``) when the stream cannot start.
+        """
+        root_type = self.schema.subscription
+        if root_type is None:
+            return ExecutionResult(
+                errors=[
+                    GraphQLError(
+                        "Schema is not configured to execute subscription operations."
+                    )
+                ],
+                executed=False,
+            )
+        grouped = collect_fields(
+            self.schema, root_type, operation.selection_set,
+            self.variable_values, self.fragments,
+        )
+        keys = list(grouped)
+        if len(keys) != 1:
+            return ExecutionResult(
+                errors=[
+                    GraphQLError(
+                        "Subscription operations must have exactly one root field."
+                    )
+                ],
+                executed=False,
+            )
+        key = keys[0]
+        field_nodes = grouped[key]
+        node = field_nodes[0]
+        field_name = node.name.value
+        field_def = getattr(root_type, "fields", {}).get(field_name)
+        if field_def is None:
+            return ExecutionResult(
+                errors=[
+                    GraphQLError(
+                        f"Cannot subscribe to field {field_name!r} on type "
+                        f"{root_type.name!r}."
+                    )
+                ],
+                executed=False,
+            )
+
+        info = self._make_info(field_name, field_def, [key], root_type, field_nodes)
+        try:
+            args = coerce_argument_values(field_def, node, self.variable_values)
+        except GraphQLError as error:
+            return ExecutionResult(errors=[error], executed=False)
+
+        try:
+            source = await self._resolve_field(field_def, self.root_value, args, info)
+        except GraphQLError as error:
+            return ExecutionResult(errors=[error], executed=False)
+        except Exception as error:  # resolver raised before producing a stream
+            return ExecutionResult(
+                errors=[self._graphql_error(error)], executed=False
+            )
+
+        if source is None or not hasattr(source, "__aiter__"):
+            return ExecutionResult(
+                errors=[
+                    GraphQLError(
+                        f"Subscription field {field_name!r} must resolve to an "
+                        f"async iterable."
+                    )
+                ],
+                executed=False,
+            )
+
+        return self._map_source_to_response(
+            source.__aiter__(), root_type, key, field_nodes, field_def
+        )
+
+    async def _map_source_to_response(
+        self, iterator, root_type, key, field_nodes, field_def
+    ):
+        try:
+            while True:
+                try:
+                    payload = await iterator.__anext__()
+                except StopAsyncIteration:
+                    break
+                except Exception as error:  # the source stream itself failed
+                    yield ExecutionResult(
+                        data=None, errors=[self._graphql_error(error)]
+                    )
+                    break
+                yield await self._execute_subscription_event(
+                    root_type, key, field_nodes, field_def, payload
+                )
+        finally:
+            aclose = getattr(iterator, "aclose", None)
+            if aclose is not None:
+                await aclose()
+
+    async def _execute_subscription_event(
+        self, root_type, key, field_nodes, field_def, payload
+    ):
+        self.errors = []  # isolate errors per event
+        node = field_nodes[0]
+        info = self._make_info(
+            node.name.value, field_def, [key], root_type, field_nodes
+        )
+        try:
+            completed = await self._complete_value(
+                field_def.type, field_nodes, [key], payload, info
+            )
+            data = {key: completed}
+        except _NullBubble:
+            data = {key: None}
+        except GraphQLError as error:
+            self._record(error, [key], node)
+            data = {key: None}
+        except Exception as error:  # noqa: BLE001 - isolate per-event failures
+            self._record(self._graphql_error(error), [key], node)
+            data = {key: None}
+        return ExecutionResult(data=data, errors=list(self.errors))
+
+    def _make_info(self, field_name, field_def, path, parent_type, field_nodes):
+        return Info(
+            field_name=field_name,
+            python_name=getattr(field_def, "python_name", None) or field_name,
+            path=list(path),
+            parent_type=parent_type,
+            schema=self.schema,
+            context=self.context,
+            root_value=self.root_value,
+            variable_values=self.variable_values,
+            operation=self.operation,
+            selected_fields=list(field_nodes),
+        )
 
     # -- field execution ------------------------------------------------------
 
@@ -264,7 +484,7 @@ class _Executor:
             self._record(error, path, node)
             return self._null_or_bubble(field_def.type)
         except Exception as error:  # resolver raised
-            self._record(GraphQLError(str(error), original_error=error), path, node)
+            self._record(self._graphql_error(error), path, node)
             return self._null_or_bubble(field_def.type)
 
     def _null_or_bubble(self, type_ref):
@@ -573,4 +793,4 @@ def _injection_plan(resolver):
 _MISSING_DEPENDENCY = object()
 
 
-__all__ = ["execute", "ExecutionResult", "Info", "ResolveInfo"]
+__all__ = ["execute", "subscribe", "ExecutionResult", "Info", "ResolveInfo"]

@@ -47,12 +47,13 @@ from fastql.decorators import (
     Union,
 )
 from fastql.errors import GraphQLError, GraphQLSyntaxError, ValidationError
-from fastql.execution import ExecutionResult, execute
+from fastql.execution import ExecutionResult, execute, subscribe
 from fastql.extensions import SchemaExtension
 from fastql.language import parse
 from fastql.registry import TypeRegistry, default_registry
 from fastql.schema_builder import SchemaBuildError, build_schema
 from fastql.sdl import print_schema
+from fastql.testing import GraphQLTestClient
 from fastql.types import (
     AppliedDirective,
     Boolean,
@@ -112,10 +113,12 @@ __all__ = [
     "build_schema",
     "SchemaBuildError",
     "execute",
+    "subscribe",
     "ExecutionResult",
     "validate",
     "parse",
     "print_schema",
+    "GraphQLTestClient",
     # Dev server (lazy — keeps the agnostic core free of the HTTP layer)
     "serve",
     "start_server",

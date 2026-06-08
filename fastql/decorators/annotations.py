@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections.abc as _cabc
 import sys
 import types
 import typing
@@ -23,6 +24,22 @@ from fastql.types import (
 )
 
 NoneType = type(None)
+
+#: Async-stream container origins (subscription resolvers). The GraphQL field
+#: type is the *yielded* type, so these unwrap to their first type argument.
+_ASYNC_STREAM_ORIGINS = (
+    _cabc.AsyncGenerator,
+    _cabc.AsyncIterator,
+    _cabc.AsyncIterable,
+)
+_ASYNC_STREAM_PREFIXES = (
+    "AsyncGenerator",
+    "AsyncIterator",
+    "AsyncIterable",
+    "typing.AsyncGenerator",
+    "typing.AsyncIterator",
+    "typing.AsyncIterable",
+)
 
 
 @dataclass(frozen=True)
@@ -86,6 +103,10 @@ def _resolve_type_hint(hint: Any, *, module: str | None, required: bool) -> Any:
     if origin is typing.Annotated:
         return _resolve_type_hint(args[0], module=module, required=required)
 
+    if origin in _ASYNC_STREAM_ORIGINS:
+        inner = args[0] if args else Any
+        return _resolve_type_hint(inner, module=module, required=required)
+
     if origin in (typing.Union, types.UnionType) or isinstance(hint, types.UnionType):
         union_args = args or get_args(hint)
         non_none = [arg for arg in union_args if arg is not NoneType]
@@ -129,6 +150,12 @@ def _resolve_string_hint(hint: str, *, module: str | None, required: bool) -> An
     ):
         text = text[1:-1]
 
+    for prefix in _ASYNC_STREAM_PREFIXES:
+        if text.startswith(prefix + "[") and text.endswith("]"):
+            inner = text[len(prefix) + 1 : -1]
+            yielded = _first_type_arg(inner).strip()
+            return _resolve_string_hint(yielded, module=module, required=required)
+
     if text.endswith(" | None"):
         return _resolve_string_hint(text[: -len(" | None")], module=module, required=False)
     if text.startswith("Optional[") and text.endswith("]"):
@@ -146,6 +173,19 @@ def _resolve_string_hint(hint: str, *, module: str | None, required: bool) -> An
     if scalar is not None:
         return _wrap(scalar, required)
     return _wrap(TypeReference(text, module), required)
+
+
+def _first_type_arg(text: str) -> str:
+    """Return the first top-level type argument from a generic's inner text."""
+    depth = 0
+    for index, char in enumerate(text):
+        if char in "[(":
+            depth += 1
+        elif char in "])":
+            depth -= 1
+        elif char == "," and depth == 0:
+            return text[:index]
+    return text
 
 
 def _wrap(type_: Any, required: bool) -> Any:
