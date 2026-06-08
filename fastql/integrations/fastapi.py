@@ -8,7 +8,7 @@ try:
     from fastapi import APIRouter, Request, Response
     from fastapi.params import Depends
 except ImportError as error:  # pragma: no cover - exercised in isolated import tests
-    raise ImportError("The FastAPI adapter requires 'fastql[fastapi]'.") from error
+    raise ImportError("The FastAPI adapter requires 'mygenx-fastql[fastapi]'.") from error
 
 from fastql.integrations.http import GraphQLHTTPHandler, HTTPRequest
 

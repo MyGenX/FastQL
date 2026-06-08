@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "fastql"
+name = "mygenx-fastql"
 version = "0.0.1"
 description = "A code-first, decorator-driven GraphQL framework for Python with a hand-built engine and a web-framework-agnostic core."
 readme = "README.md"
@@ -55,10 +55,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MyGenX/fastql"
-Documentation = "https://github.com/MyGenX/fastql/tree/main/docs"
-Repository = "https://github.com/MyGenX/fastql"
-Issues = "https://github.com/MyGenX/fastql/issues"
+Homepage = "https://github.com/MyGenX/FastQL"
+Documentation = "https://github.com/MyGenX/FastQL/tree/main/docs"
+Repository = "https://github.com/MyGenX/FastQL"
+Issues = "https://github.com/MyGenX/FastQL/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["fastql"]

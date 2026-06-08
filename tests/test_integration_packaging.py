@@ -13,9 +13,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 PYPROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text())
+DIST_NAME = "mygenx-fastql"
+DIST_FILENAME = "mygenx_fastql"
 
 
 def test_base_distribution_has_no_runtime_dependencies():
+    assert PYPROJECT["project"]["name"] == DIST_NAME
     assert PYPROJECT["project"]["dependencies"] == []
 
 
@@ -66,7 +69,7 @@ def test_missing_adapter_errors_name_the_installation_extra():
             and isinstance(node.exc.args[0], ast.Constant)
             and isinstance(node.exc.args[0].value, str)
         ]
-        assert any(f"fastql[{name}]" in message for message in messages)
+        assert any(f"{DIST_NAME}[{name}]" in message for message in messages)
 
 
 def test_framework_modules_are_included_by_package_configuration():
@@ -93,11 +96,12 @@ def test_built_wheel_contains_adapters_and_optional_metadata(tmp_path):
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
-    wheel = next(tmp_path.glob("fastql-*.whl"))
+    wheel = next(tmp_path.glob(f"{DIST_FILENAME}-*.whl"))
     with zipfile.ZipFile(wheel) as archive:
         names = set(archive.namelist())
         metadata_name = next(name for name in names if name.endswith(".dist-info/METADATA"))
         metadata = archive.read(metadata_name).decode()
+    assert f"Name: {DIST_NAME}" in metadata
     package_dirs = {
         path.relative_to(ROOT).as_posix()
         for path in (ROOT / "fastql").rglob("*")
@@ -129,7 +133,7 @@ def test_built_sdist_excludes_workspace_only_content(tmp_path):
         timeout=60,
     )
     assert result.returncode == 0, result.stderr
-    sdist = next(tmp_path.glob("fastql-*.tar.gz"))
+    sdist = next(tmp_path.glob(f"{DIST_FILENAME}-*.tar.gz"))
     with tarfile.open(sdist) as archive:
         names = {Path(name).as_posix() for name in archive.getnames()}
     relative_names = {name.split("/", 1)[1] for name in names if "/" in name}

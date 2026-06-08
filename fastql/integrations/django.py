@@ -10,7 +10,7 @@ try:
     from django.views import View
     from django.views.decorators.csrf import csrf_exempt as csrf_exempt_decorator
 except ImportError as error:  # pragma: no cover - exercised in isolated import tests
-    raise ImportError("The Django adapter requires 'fastql[django]'.") from error
+    raise ImportError("The Django adapter requires 'mygenx-fastql[django]'.") from error
 
 from fastql.integrations.http import GraphQLHTTPHandler, HTTPRequest
 

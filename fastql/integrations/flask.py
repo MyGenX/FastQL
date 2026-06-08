@@ -7,7 +7,7 @@ from typing import Any
 try:
     from flask import Blueprint, Response, current_app, g, request
 except ImportError as error:  # pragma: no cover - exercised in isolated import tests
-    raise ImportError("The Flask adapter requires 'fastql[flask]'.") from error
+    raise ImportError("The Flask adapter requires 'mygenx-fastql[flask]'.") from error
 
 from fastql.integrations._sync import run_sync
 from fastql.integrations.http import GraphQLHTTPHandler, HTTPRequest

@@ -142,7 +142,7 @@ plus FastAPI/Django/Flask/ASGI adapters) plug in on top and consume `build_schem
 Install only the framework adapter an application uses:
 
 ```bash
-pip install fastql[fastapi]   # or starlette, flask, django
+pip install mygenx-fastql[fastapi]   # or starlette, flask, django
 ```
 
 ```python

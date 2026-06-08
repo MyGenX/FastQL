@@ -10,7 +10,7 @@ try:
     from starlette.routing import Route, Router
 except ImportError as error:  # pragma: no cover - exercised in isolated import tests
     raise ImportError(
-        "The Starlette adapter requires 'fastql[starlette]'."
+        "The Starlette adapter requires 'mygenx-fastql[starlette]'."
     ) from error
 
 from fastql.integrations.http import GraphQLHTTPHandler, HTTPRequest

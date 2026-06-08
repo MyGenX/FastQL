@@ -15,7 +15,7 @@ DOCS = ROOT / "docs"
 FRONTMATTER = re.compile(r"\A---\n(?P<body>.*?)\n---\n", re.DOTALL)
 LOCAL_LINK = re.compile(r"\]\((/[^)#?]+)(?:#[^)]+)?\)|href=\"(/[^\"#?]+)")
 SPEC_LINK = re.compile(
-    r"https://github\.com/MyGenX/fastql/blob/main/openspec/specs/([^/]+)/spec\.md"
+    r"https://github\.com/MyGenX/FastQL/blob/main/openspec/specs/([^/]+)/spec\.md"
 )
 
 
@@ -120,7 +120,7 @@ def test_framework_integration_docs_and_examples_are_complete():
 
     overview = (DOCS / "integrations" / "overview.mdx").read_text()
     for extra in ("asgi", "starlette", "fastapi", "flask", "django", "all"):
-        assert f"fastql[{extra}]" in overview
+        assert f"mygenx-fastql[{extra}]" in overview
 
     projects = ROOT / "examples" / "projects"
     # Each framework has a runnable mini-project that mounts the shared showcase schema.

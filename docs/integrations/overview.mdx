@@ -9,13 +9,13 @@ the shared FastQL GraphQL-over-HTTP contract.
 
 | Integration | Install | Public entry point |
 | --- | --- | --- |
-| Generic ASGI | `pip install fastql` or `pip install fastql[asgi]` | `GraphQLASGI` |
-| Starlette | `pip install fastql[starlette]` | `create_starlette_router` |
-| FastAPI | `pip install fastql[fastapi]` | `create_fastapi_router` |
-| Flask | `pip install fastql[flask]` | `create_flask_blueprint` |
-| Django | `pip install fastql[django]` | `create_django_urlpatterns` |
+| Generic ASGI | `pip install mygenx-fastql` or `pip install mygenx-fastql[asgi]` | `GraphQLASGI` |
+| Starlette | `pip install mygenx-fastql[starlette]` | `create_starlette_router` |
+| FastAPI | `pip install mygenx-fastql[fastapi]` | `create_fastapi_router` |
+| Flask | `pip install mygenx-fastql[flask]` | `create_flask_blueprint` |
+| Django | `pip install mygenx-fastql[django]` | `create_django_urlpatterns` |
 
-Use `pip install fastql[all]` only for development or applications that truly
+Use `pip install mygenx-fastql[all]` only for development or applications that truly
 host every adapter. An individual extra does not install unrelated frameworks.
 
 All adapters use the same options: `path`, `context_factory`, `root_value`,

@@ -106,17 +106,17 @@
     "links": [
       {
         "label": "GitHub",
-        "href": "https://github.com/fastql/fastql"
+        "href": "https://github.com/MyGenX/FastQL"
       }
     ],
     "primary": {
       "type": "github",
-      "href": "https://github.com/fastql/fastql"
+      "href": "https://github.com/MyGenX/FastQL"
     }
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/fastql/fastql"
+      "github": "https://github.com/MyGenX/FastQL"
     }
   }
 }
