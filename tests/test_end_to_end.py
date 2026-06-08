@@ -1,11 +1,11 @@
 """End-to-end integration: the full pipeline via the public API.
 
 Parses -> validates -> injects args + context -> executes async -> returns the
-spec-shaped ``{data, errors}``.
+spec-shaped ``{data, errors}``. Runs against the ``examples.app`` showcase schema.
 """
 
 import fastql
-from examples.hello import BATCH_CALLS, AppContext, User, make_context, schema
+from examples.app import BATCH_CALLS, User, make_context, reseed, schema
 
 
 def test_public_api_surface():
@@ -18,12 +18,10 @@ def test_public_api_surface():
 
 
 async def test_end_to_end_query_with_args_and_context():
-    ctx = AppContext(users={1: User(1, "Ada Lovelace")})
-
     result = await fastql.execute(
         schema,
         "{ user(id: 1) { id name } ping }",
-        context=ctx,
+        context=make_context(),
     )
 
     assert result.errors == []
@@ -32,31 +30,24 @@ async def test_end_to_end_query_with_args_and_context():
         "ping": "pong",
     }
     formatted = result.formatted()
-    assert formatted["data"] == {
-        "user": {"id": 1, "name": "Ada Lovelace"},
-        "ping": "pong",
-    }
-    # The example schema attaches a Timing extension, surfaced under `extensions`.
+    assert formatted["data"]["ping"] == "pong"
+    # The example schema attaches schema-wide extensions, surfaced under `extensions`.
     assert "timing" in formatted["extensions"]
+    assert "resolverCount" in formatted["extensions"]
 
 
 async def test_end_to_end_with_variables():
-    ctx = AppContext(users={2: User(2, "Grace Hopper")})
-
     result = await fastql.execute(
         schema,
         "query Lookup($id: Int!) { user(id: $id) { name } }",
         variable_values={"id": 2},
-        context=ctx,
     )
 
     assert result.data == {"user": {"name": "Grace Hopper"}}
 
 
 async def test_end_to_end_missing_user_returns_null():
-    ctx = AppContext(users={})
-
-    result = await fastql.execute(schema, "{ user(id: 99) { id } }", context=ctx)
+    result = await fastql.execute(schema, "{ user(id: 99) { id } }")
 
     # `user` is nullable, so a missing record yields a null with no errors.
     assert result.data == {"user": None}
@@ -64,9 +55,7 @@ async def test_end_to_end_missing_user_returns_null():
 
 
 async def test_end_to_end_validation_error_has_no_data():
-    ctx = AppContext(users={})
-
-    result = await fastql.execute(schema, "{ user(id: 1) { nope } }", context=ctx)
+    result = await fastql.execute(schema, "{ user(id: 1) { nope } }")
 
     assert result.executed is False
     assert any("nope" in e.message for e in result.errors)
@@ -78,11 +67,9 @@ async def test_end_to_end_introspection():
     assert result.data == {"__schema": {"queryType": {"name": "Query"}}}
 
 
-async def test_end_to_end_computed_field_and_query_class():
+async def test_end_to_end_computed_field():
     result = await fastql.execute(
-        schema,
-        "{ user(id: 1) { id name loudName } ping }",
-        context=make_context(),
+        schema, "{ user(id: 1) { id name loudName } ping }"
     )
     assert result.errors == []
     assert result.data == {
@@ -93,12 +80,12 @@ async def test_end_to_end_computed_field_and_query_class():
 
 async def test_end_to_end_dataloader_batches_posts():
     # Querying posts across many users triggers a single batched load (no N+1).
+    reseed()
     BATCH_CALLS.clear()
 
+    # A context is required for per-request loader caching (and thus batching).
     result = await fastql.execute(
-        schema,
-        "{ users { name posts { title } } }",
-        context=make_context(),
+        schema, "{ users { name posts { title } } }", context=make_context()
     )
 
     assert result.errors == []

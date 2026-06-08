@@ -75,7 +75,10 @@ multiple globally decorated root classes.
 `.formatted()` helper that produces the GraphQL-over-HTTP response shape. Introspection
 (`__schema`, `__type`, `__typename`) is built in.
 
-A runnable version of this lives in [`examples/hello.py`](examples/hello.py).
+A fuller, runnable version — covering every type kind, mutations, subscriptions,
+DataLoaders, permissions, and extensions — lives in [`examples/app`](examples/app), the
+showcase schema that the per-framework projects under [`examples/projects`](examples/projects)
+all reuse.
 
 The documentation quickstart and first-schema examples are also executed by the test
 suite from [`docs/snippets`](docs/snippets).
@@ -85,7 +88,7 @@ suite from [`docs/snippets`](docs/snippets).
 Try a schema in the browser with the built-in, zero-dependency dev server:
 
 ```bash
-python -m fastql serve examples.hello:schema      # http://127.0.0.1:7691
+python -m fastql serve examples.app:schema      # http://127.0.0.1:7691
 ```
 
 It serves, on the default port **7691**:
@@ -101,14 +104,14 @@ Override the binding with `--host` / `--port`. If your resolvers need a `Context
 point `--context` at a value or zero-arg factory:
 
 ```bash
-python -m fastql serve examples.hello:schema --context examples.hello:make_context
+python -m fastql serve examples.app:schema --context examples.app:make_context
 ```
 
 Or call it programmatically:
 
 ```python
 import fastql
-from examples.hello import schema, make_context
+from examples.app import schema, make_context
 
 fastql.serve(schema, port=7691, context_factory=make_context)  # blocking; Ctrl-C to stop
 ```
@@ -153,6 +156,11 @@ app.include_router(create_fastapi_router(schema, graphiql=True))
 The base installation includes the dependency-free `GraphQLASGI` adapter. See
 the [integration documentation](docs/integrations/overview.mdx) for mounting,
 request context, endpoint configuration, and supported versions.
+
+Runnable per-framework projects — FastAPI, Starlette, Flask, Django, and raw ASGI, each
+mounting the **same** [`examples/app`](examples/app) schema — live under
+[`examples/projects`](examples/projects). Reusing one schema across every adapter is the
+proof that the core is framework-agnostic; each project differs only in a few lines of glue.
 
 ## Development
 

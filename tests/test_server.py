@@ -135,7 +135,7 @@ async def test_context_factory_injects_context_into_resolvers():
 
 
 async def test_example_user_resolves_via_fallback_store():
-    from examples.hello import schema
+    from examples.app import schema
 
     d = _Dispatcher(schema, "/graphql")
     r = await d.dispatch(

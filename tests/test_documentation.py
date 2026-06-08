@@ -122,8 +122,17 @@ def test_framework_integration_docs_and_examples_are_complete():
     for extra in ("asgi", "starlette", "fastapi", "flask", "django", "all"):
         assert f"fastql[{extra}]" in overview
 
-    examples = ROOT / "examples" / "integrations"
-    for name in ("asgi", "starlette", "fastapi", "flask", "django"):
-        source = (examples / f"{name}.py").read_text()
+    projects = ROOT / "examples" / "projects"
+    # Each framework has a runnable mini-project that mounts the shared showcase schema.
+    entrypoints = {
+        "asgi": "asgi/app.py",
+        "starlette": "starlette/app.py",
+        "fastapi": "fastapi/app.py",
+        "flask": "flask/app.py",
+        "django": "django/urls.py",
+    }
+    for name, relative in entrypoints.items():
+        source = (projects / relative).read_text()
         ast.parse(source)
         assert "schema" in source
+        assert (projects / name / "README.md").exists()

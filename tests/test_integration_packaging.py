@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import subprocess
 import sys
+import tarfile
 import tomllib
 import zipfile
 from pathlib import Path
@@ -16,6 +17,12 @@ PYPROJECT = tomllib.loads((ROOT / "pyproject.toml").read_text())
 
 def test_base_distribution_has_no_runtime_dependencies():
     assert PYPROJECT["project"]["dependencies"] == []
+
+
+def test_runtime_version_matches_distribution_metadata():
+    import fastql
+
+    assert fastql.__version__ == PYPROJECT["project"]["version"]
 
 
 def test_every_adapter_has_an_independent_extra_and_all_is_the_union():
@@ -91,7 +98,44 @@ def test_built_wheel_contains_adapters_and_optional_metadata(tmp_path):
         names = set(archive.namelist())
         metadata_name = next(name for name in names if name.endswith(".dist-info/METADATA"))
         metadata = archive.read(metadata_name).decode()
+    package_dirs = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "fastql").rglob("*")
+        if path.is_dir() and (path / "__init__.py").is_file()
+    }
+    package_dirs.add("fastql")
+    for package_dir in package_dirs:
+        assert f"{package_dir}/__init__.py" in names
     assert "fastql/integrations/http.py" in names
     assert "fastql/integrations/django.py" in names
     for extra in ("asgi", "starlette", "fastapi", "flask", "django", "all"):
         assert f"Provides-Extra: {extra}" in metadata
+
+
+def test_built_sdist_excludes_workspace_only_content(tmp_path):
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "build",
+            "--sdist",
+            "--no-isolation",
+            "--outdir",
+            str(tmp_path),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stderr
+    sdist = next(tmp_path.glob("fastql-*.tar.gz"))
+    with tarfile.open(sdist) as archive:
+        names = {Path(name).as_posix() for name in archive.getnames()}
+    relative_names = {name.split("/", 1)[1] for name in names if "/" in name}
+    assert "pyproject.toml" in relative_names
+    assert "README.md" in relative_names
+    assert "CHANGELOG.md" in relative_names
+    assert "fastql/__init__.py" in relative_names
+    assert not any("node_modules" in name for name in relative_names)
+    assert not any(name.startswith(("tests/", "docs/", "openspec/")) for name in relative_names)
