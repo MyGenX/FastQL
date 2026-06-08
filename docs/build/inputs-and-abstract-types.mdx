@@ -1,0 +1,48 @@
+---
+title: Inputs and abstract types
+description: Model input objects, interfaces, unions, enums, and custom scalars.
+---
+
+## Input objects
+
+```python
+from fastql import Input
+
+
+@Input(description="Values accepted when creating a user.")
+class CreateUserInput:
+    name: str
+    email: str
+```
+
+`@Input` follows the same class metadata contract as `@Type`, but its fields are
+compiled as GraphQL input fields and cannot have output resolvers.
+
+## Interfaces and unions
+
+```python
+from fastql import Interface, Type, Union
+
+
+@Interface
+class Node:
+    id: str
+
+
+@Type(interfaces=[Node])
+class User:
+    id: str
+    name: str
+
+
+SearchResult = Union("SearchResult", types=[User])
+```
+
+Use interfaces when members guarantee shared fields. Use unions when members only
+share a possible result position.
+
+## Enums and scalars
+
+`@Enum` maps Python enum members to GraphQL enum values. `@Scalar` or `Scalar(...)`
+defines custom serialization and parsing. Include non-root types explicitly in
+`build_schema(types=[...])` when they are not reachable through a root field.

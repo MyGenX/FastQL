@@ -12,12 +12,12 @@ that override the defaults (`127.0.0.1` and `7691`).
 
 #### Scenario: Serve a schema by dotted path
 
-- **WHEN** a user runs `python -m fastql serve examples.hello:schema`
-- **THEN** the CLI imports `schema` from `examples.hello` and starts the dev server on `127.0.0.1:7691`
+- **WHEN** a user runs `python -m fastql serve examples.app:schema`
+- **THEN** the CLI imports `schema` from `examples.app` and starts the dev server on `127.0.0.1:7691`
 
 #### Scenario: Override host and port
 
-- **WHEN** a user runs `python -m fastql serve examples.hello:schema --host 0.0.0.0 --port 9000`
+- **WHEN** a user runs `python -m fastql serve examples.app:schema --host 0.0.0.0 --port 9000`
 - **THEN** the server binds to `0.0.0.0:9000`
 
 #### Scenario: Invalid target

@@ -1,0 +1,43 @@
+---
+title: Operations and schema
+description: Compose query, mutation, and subscription roots into a schema.
+---
+
+Operation decorators use the same class and field model as `@Type`.
+
+```python
+from fastql import Field, Mutation, Query, Schema, Subscription
+
+
+@Query(name="Query")
+class QueryRoot:
+    version: str = "1.0"
+
+
+@Mutation(name="Mutation")
+class MutationRoot:
+    @Field
+    def rename_user(self, id: str, name: str) -> bool:
+        return True
+
+
+@Subscription(name="Subscription")
+class SubscriptionRoot:
+    status: str = "idle"
+
+
+schema = Schema(
+    query=QueryRoot,
+    mutation=MutationRoot,
+    subscription=SubscriptionRoot,
+)
+```
+
+`Schema(...)` compiles decorated Python root classes automatically. `build_schema(...)`
+provides the equivalent functional API and accepts additional named types, a registry,
+and `SchemaConfig`.
+
+<Warning>
+Subscription root metadata is supported, but FastQL does not yet implement a
+streaming subscription transport or event execution lifecycle.
+</Warning>

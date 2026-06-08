@@ -1,0 +1,34 @@
+---
+title: Naming and configuration
+description: Control GraphQL names while keeping Python definitions idiomatic.
+---
+
+`SchemaConfig(auto_camel_case=True)` converts inferred Python names to GraphQL
+camel case during schema compilation.
+
+```python
+from fastql import Field, SchemaConfig, Type, build_schema
+
+
+@Type
+class UserProfile:
+    display_name: str
+    legacy_code: str = Field(name="legacyID")
+
+
+schema = build_schema(
+    query=QueryRoot,
+    config=SchemaConfig(auto_camel_case=True),
+)
+```
+
+`display_name` becomes `displayName`; the explicit `legacyID` name is preserved.
+
+Naming precedence is:
+
+1. Explicit GraphQL name on `Field`, `Arg`, or a type decorator
+2. Inferred Python name transformed by `auto_camel_case`
+3. Original Python name when automatic camel case is disabled
+
+Explicit names are appropriate for compatibility contracts. Inferred names reduce
+repetition in new schemas.

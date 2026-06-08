@@ -1,0 +1,40 @@
+---
+title: Types and fields
+description: Define object types with annotations, Field descriptors, and resolvers.
+---
+
+`@Type` discovers annotated attributes and resolver-backed `Field` values.
+
+```python
+from fastql import Field, Type
+
+
+@Type(name="Account", description="A customer account.")
+class AccountModel:
+    id: str
+    display_name: str = Field(name="name")
+    tags: list[str] = Field(default_factory=list)
+
+    @Field(description="A stable display label.")
+    def label(self) -> str:
+        return f"{self.display_name} ({self.id})"
+```
+
+## Declaration styles
+
+| Style | Use it for |
+| --- | --- |
+| `name: str` | A required field inferred from a Python annotation |
+| `name: str | None = None` | A nullable field with a Python default |
+| `name: str = Field(...)` | A stored field with GraphQL metadata |
+| `@Field def name(...)` | A computed field backed by a resolver |
+| `Field(resolver=callable)` | Programmatic resolver attachment |
+
+`Field` accepts GraphQL name, description, deprecation reason, explicit type,
+default, default factory, argument metadata, directives, extensions, and permission
+classes. A field cannot define both `default` and `default_factory`.
+
+<Note>
+The same `Field` contract is used on object types and query, mutation, or
+subscription roots. Operation decorators change root semantics, not field syntax.
+</Note>
