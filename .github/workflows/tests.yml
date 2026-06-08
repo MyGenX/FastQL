@@ -1,0 +1,77 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run test suite
+        run: uv run --extra all --extra dev pytest
+
+  package:
+    name: Validate distributions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install packaging tools
+        run: python -m pip install --upgrade build twine
+
+      - name: Build distributions
+        run: python -m build
+
+      - name: Check distribution metadata
+        run: python -m twine check --strict dist/*
+
+      - name: Install and import packaged subpackages
+        shell: bash
+        run: |
+          python -m venv /tmp/fastql-wheel-test
+          /tmp/fastql-wheel-test/bin/python -m pip install --no-deps dist/*.whl
+          cd /tmp
+          /tmp/fastql-wheel-test/bin/python - <<'PY'
+          import importlib
+          from pathlib import Path
+
+          import fastql
+
+          package_root = Path(fastql.__file__).parent
+          package_names = {"fastql"}
+          for init_file in package_root.rglob("__init__.py"):
+              relative = init_file.parent.relative_to(package_root)
+              package_names.add(".".join(("fastql", *relative.parts)))
+          for package_name in sorted(package_names):
+              importlib.import_module(package_name)
+
+          print(f"installed fastql {fastql.__version__}: {', '.join(sorted(package_names))}")
+          PY

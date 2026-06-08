@@ -15,7 +15,7 @@ DOCS = ROOT / "docs"
 FRONTMATTER = re.compile(r"\A---\n(?P<body>.*?)\n---\n", re.DOTALL)
 LOCAL_LINK = re.compile(r"\]\((/[^)#?]+)(?:#[^)]+)?\)|href=\"(/[^\"#?]+)")
 SPEC_LINK = re.compile(
-    r"https://github\.com/fastql/fastql/blob/main/openspec/specs/([^/]+)/spec\.md"
+    r"https://github\.com/MyGenX/fastql/blob/main/openspec/specs/([^/]+)/spec\.md"
 )
 
 

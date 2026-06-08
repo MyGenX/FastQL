@@ -18,6 +18,8 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Typing :: Typed",
 ]
@@ -53,11 +55,21 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/fastql/fastql"
-Documentation = "https://github.com/fastql/fastql/tree/main/docs"
+Homepage = "https://github.com/MyGenX/fastql"
+Documentation = "https://github.com/MyGenX/fastql/tree/main/docs"
+Repository = "https://github.com/MyGenX/fastql"
+Issues = "https://github.com/MyGenX/fastql/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["fastql"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/fastql",
+    "/CHANGELOG.md",
+    "/README.md",
+    "/pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 # Async-first: allow plain `async def test_...` without per-test markers.
