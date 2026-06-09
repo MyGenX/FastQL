@@ -32,6 +32,24 @@ class DefinitionSpec:
     interfaces: tuple[Any, ...] = ()
 
 
+@dataclass(eq=False)
+class GenericTemplate:
+    """A deferred ``Generic[T]`` type, concretized per parametrization at build time.
+
+    ``fields`` holds the collected IR fields with :class:`TypeVarRef` placeholders in
+    type-variable positions; ``base_name``/``name_template`` drive synthetic naming.
+    """
+
+    kind: str
+    python_type: type
+    base_name: str
+    name_template: str | None
+    description: str | None
+    interfaces: tuple[Any, ...]
+    type_param_names: tuple[str, ...]
+    fields: dict[str, Any]
+
+
 def decorate_definition(
     kind: str,
     target: type,
@@ -39,8 +57,10 @@ def decorate_definition(
     name: str | None = None,
     description: str | None = None,
     interfaces: list[Any] | None = None,
+    directives: list[Any] | None = None,
 ) -> type:
     gql_name = name or _default_name(kind, target)
+    applied_directives = list(directives or ())
     spec = DefinitionSpec(
         kind=kind,
         python_type=target,
@@ -50,10 +70,23 @@ def decorate_definition(
     )
     setattr(target, "__fastql_definition__", spec)
 
+    type_param_names = tuple(
+        getattr(param, "__name__", str(param))
+        for param in getattr(target, "__parameters__", ())
+    )
+    if type_param_names:
+        return _decorate_generic(
+            kind, target, name, description, interfaces, type_param_names
+        )
+
     if kind == "input":
         fields, data_fields = _collect_fields(target, input_position=True)
         type_ = InputObjectType(
-            gql_name, fields=fields, description=description, python_type=target
+            gql_name,
+            fields=fields,
+            description=description,
+            python_type=target,
+            directives=applied_directives,
         )
         apply_constructor(target, data_fields)
         default_registry.register_type(target, type_)
@@ -61,7 +94,9 @@ def decorate_definition(
 
     fields, data_fields = _collect_fields(target, input_position=False)
     if kind == "interface":
-        type_ = InterfaceType(gql_name, fields=fields, description=description)
+        type_ = InterfaceType(
+            gql_name, fields=fields, description=description, directives=applied_directives
+        )
         default_registry.register_type(target, type_)
         return target
 
@@ -76,6 +111,7 @@ def decorate_definition(
             fields=inherited,
             interfaces=resolved_interfaces,
             description=description,
+            directives=applied_directives,
         )
         apply_constructor(target, data_fields)
         default_registry.register_type(target, type_)
@@ -95,8 +131,46 @@ def decorate_definition(
     return target
 
 
+def _decorate_generic(
+    kind: str,
+    target: type,
+    name: str | None,
+    description: str | None,
+    interfaces: list[Any] | None,
+    type_param_names: tuple[str, ...],
+) -> type:
+    """Register ``target`` as a generic template; concretization is deferred to build."""
+    if kind not in ("type", "input", "interface"):
+        raise TypeError(f"@{kind.title()} cannot be generic.")
+    params = frozenset(type_param_names)
+    fields, data_fields = _collect_fields(
+        target, input_position=(kind == "input"), type_params=params
+    )
+    if name and "{" in name:
+        base_name, name_template = target.__name__, name
+    elif name:
+        base_name, name_template = name, None
+    else:
+        base_name, name_template = target.__name__, None
+    template = GenericTemplate(
+        kind=kind,
+        python_type=target,
+        base_name=base_name,
+        name_template=name_template,
+        description=description,
+        interfaces=tuple(interfaces or ()),
+        type_param_names=type_param_names,
+        fields=fields,
+    )
+    default_registry.generic_templates[target] = template
+    setattr(target, "__fastql_generic__", template)
+    if kind in ("type", "input"):
+        apply_constructor(target, data_fields)
+    return target
+
+
 def _collect_fields(
-    cls: type, *, input_position: bool
+    cls: type, *, input_position: bool, type_params: frozenset[str] = frozenset()
 ) -> tuple[dict[str, Any], list[tuple[str, Any]]]:
     fields: dict[str, Any] = {}
     data_fields: list[tuple[str, Any]] = []
@@ -110,8 +184,15 @@ def _collect_fields(
         field_type = (
             spec.type
             if spec is not None and spec.type is not None
-            else resolve_type_hint(hint, module=cls.__module__)
+            else resolve_type_hint(hint, module=cls.__module__, type_params=type_params)
         )
+
+        if spec is not None and spec.private:
+            # Excluded from the GraphQL schema; still a Python attribute if it is
+            # a data field (so resolvers can read it at runtime).
+            if not spec.is_computed:
+                data_fields.append((python_name, _field_default(raw, spec)))
+            continue
 
         if input_position:
             if spec is not None and (
@@ -146,7 +227,7 @@ def _collect_fields(
 
         if spec is not None and spec.is_computed:
             fields[graphql_name] = _output_field(
-                cls, python_name, field_type, spec, spec.resolver
+                cls, python_name, field_type, spec, spec.resolver, type_params
             )
             continue
 
@@ -159,6 +240,7 @@ def _collect_fields(
             extensions=list(spec.extensions if spec else ()),
             permission_classes=list(spec.permission_classes if spec else ()),
             graphql_name_explicit=bool(spec and spec.graphql_name),
+            external=bool(spec and spec.external),
         )
         data_fields.append((python_name, _field_default(raw, spec)))
 
@@ -175,20 +257,24 @@ def _collect_fields(
                     f"Computed field {cls.__name__}.{python_name} needs a return type"
                 )
             field_type = value.type or resolve_type_hint(
-                return_hint, module=cls.__module__
+                return_hint, module=cls.__module__, type_params=type_params
             )
             graphql_name = value.graphql_name or python_name
             fields[graphql_name] = _output_field(
-                cls, python_name, field_type, value, resolver
+                cls, python_name, field_type, value, resolver, type_params
             )
 
     return fields, data_fields
 
 
-def _output_field(cls, python_name, field_type, spec, resolver) -> IRField:
+def _output_field(
+    cls, python_name, field_type, spec, resolver, type_params=frozenset()
+) -> IRField:
     return IRField(
         field_type,
-        args=_arguments_from_resolver(resolver, cls.__module__, spec.arguments),
+        args=_arguments_from_resolver(
+            resolver, cls.__module__, spec.arguments, type_params
+        ),
         resolver=resolver,
         description=spec.description,
         deprecation_reason=spec.deprecation_reason,
@@ -197,6 +283,7 @@ def _output_field(cls, python_name, field_type, spec, resolver) -> IRField:
         extensions=list(spec.extensions),
         permission_classes=list(spec.permission_classes),
         graphql_name_explicit=bool(spec.graphql_name),
+        external=bool(getattr(spec, "external", False)),
     )
 
 
@@ -204,6 +291,7 @@ def _arguments_from_resolver(
     resolver: Callable[..., Any],
     module: str | None,
     overrides: dict[str, ArgumentSpec] | None = None,
+    type_params: frozenset[str] = frozenset(),
 ) -> dict[str, IRArgument]:
     signature = inspect.signature(resolver)
     injected = injected_parameter_names(resolver)
@@ -238,7 +326,7 @@ def _arguments_from_resolver(
         else:
             default = None
         args[gql_name] = IRArgument(
-            resolve_type_hint(hint, module=module),
+            resolve_type_hint(hint, module=module, type_params=type_params),
             default_value=default,
             description=meta.description,
             deprecation_reason=meta.deprecation_reason,
@@ -291,4 +379,4 @@ def _default_name(kind: str, target: type) -> str:
     return target.__name__
 
 
-__all__ = ["DefinitionSpec", "decorate_definition"]
+__all__ = ["DefinitionSpec", "GenericTemplate", "decorate_definition"]

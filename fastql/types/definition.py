@@ -28,6 +28,7 @@ class ScalarType:
     parse_literal: Callable[[Any], Any]
     description: str | None = None
     specified_by_url: str | None = None
+    directives: list[Any] = field(default_factory=list)
     kind: TypeKind = field(default=TypeKind.SCALAR, init=False)
 
 
@@ -59,6 +60,7 @@ class Field:
     permission_classes: list[Any] = field(default_factory=list)
     owner: type | None = None
     graphql_name_explicit: bool = False
+    external: bool = False
 
 
 @dataclass
@@ -84,6 +86,7 @@ class ObjectType:
     interfaces: list["InterfaceType"] = field(default_factory=list)
     description: str | None = None
     is_type_of: Callable[[Any], bool] | None = None
+    directives: list[Any] = field(default_factory=list)
     kind: TypeKind = field(default=TypeKind.OBJECT, init=False)
 
 
@@ -95,6 +98,7 @@ class InterfaceType:
     fields: dict[str, Field]
     description: str | None = None
     resolve_type: Callable[[Any], ObjectType | str | None] | None = None
+    directives: list[Any] = field(default_factory=list)
     kind: TypeKind = field(default=TypeKind.INTERFACE, init=False)
 
 
@@ -106,6 +110,7 @@ class UnionType:
     types: list[ObjectType]
     description: str | None = None
     resolve_type: Callable[[Any], ObjectType | str | None] | None = None
+    directives: list[Any] = field(default_factory=list)
     kind: TypeKind = field(default=TypeKind.UNION, init=False)
 
 
@@ -116,6 +121,7 @@ class EnumValue:
     value: Any = None
     description: str | None = None
     deprecation_reason: str | None = None
+    python_name: str | None = None
 
 
 @dataclass
@@ -125,6 +131,7 @@ class EnumType:
     name: str
     values: dict[str, EnumValue]
     description: str | None = None
+    directives: list[Any] = field(default_factory=list)
     kind: TypeKind = field(default=TypeKind.ENUM, init=False)
 
     @classmethod
@@ -146,6 +153,7 @@ class InputObjectType:
     fields: dict[str, InputField]
     description: str | None = None
     python_type: type | None = None
+    directives: list[Any] = field(default_factory=list)
     kind: TypeKind = field(default=TypeKind.INPUT_OBJECT, init=False)
 
 

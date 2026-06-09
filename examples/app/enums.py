@@ -9,13 +9,17 @@ from __future__ import annotations
 
 from enum import Enum as PythonEnum
 
-from fastql import Enum
+from fastql import Enum, enum_value
 
 
 @Enum
 class Role(PythonEnum):
-    ADMIN = "admin"
-    MEMBER = "member"
+    ADMIN = enum_value("admin", description="May administer and publish content.")
+    MEMBER = enum_value(
+        "member",
+        description="A standard community account.",
+        deprecation_reason="Prefer application-specific role enums for new APIs.",
+    )
 
 
 @Enum

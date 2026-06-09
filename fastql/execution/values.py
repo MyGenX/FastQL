@@ -205,6 +205,9 @@ def complete_leaf_value(named_type: Any, value: Any) -> Any:
         if isinstance(value, PythonEnum):
             if value.name in named_type.values:
                 return value.name
+            for enum_name, enum_value in named_type.values.items():
+                if getattr(enum_value, "python_name", None) == value.name:
+                    return enum_name  # GraphQL name override via enum_value(name=...)
         for enum_name, enum_value in named_type.values.items():
             if enum_value.value == value or enum_name == value:
                 return enum_name
