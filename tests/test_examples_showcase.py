@@ -48,6 +48,28 @@ async def test_enum_field_serializes_to_member_name():
     assert result.data == {"user": {"role": "ADMIN"}}
 
 
+async def test_enum_member_metadata_is_introspectable_without_renaming_values():
+    result = await client().execute(
+        '{ __type(name: "Role") { enumValues(includeDeprecated: true) {'
+        " name description isDeprecated deprecationReason } } }"
+    )
+    values = {
+        value["name"]: value for value in result.data["__type"]["enumValues"]
+    }
+    assert values["ADMIN"]["description"] == "May administer and publish content."
+    assert values["MEMBER"]["isDeprecated"] is True
+    assert "application-specific" in values["MEMBER"]["deprecationReason"]
+
+
+async def test_private_field_stays_python_visible_but_graphql_hidden():
+    result = await client().execute(
+        '{ user(id: 1) { directoryLabel } __type(name: "User") { fields { name } } }'
+    )
+    assert result.data["user"] == {"directoryLabel": "01: Ada Lovelace"}
+    names = {field["name"] for field in result.data["__type"]["fields"]}
+    assert "sortKey" not in names
+
+
 async def test_interface_node_resolves_concrete_type():
     result = await client().execute(
         '{ node(id: 10) { __typename ... on Post { title } } }'

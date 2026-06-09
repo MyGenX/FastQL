@@ -2,7 +2,8 @@
 """Decorator authoring surface for code-first schemas."""
 
 from fastql.decorators.annotations import TypeReference, resolve_type_hint
-from fastql.decorators.enum import Enum
+from fastql.decorators.directive import Directive
+from fastql.decorators.enum import Enum, enum_value
 from fastql.decorators.field import (
     Arg,
     Argument,
@@ -22,7 +23,9 @@ __all__ = [
     "Arg",
     "Argument",
     "BasePermission",
+    "Directive",
     "Enum",
+    "enum_value",
     "Field",
     "FieldSpec",
     "FieldExtension",

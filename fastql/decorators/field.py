@@ -75,6 +75,8 @@ class FieldSpec:
     directives: list[AppliedDirective] = field(default_factory=list)
     extensions: list[Any] = field(default_factory=list)
     permission_classes: list[Any] = field(default_factory=list)
+    private: bool = False
+    external: bool = False
 
     def __set_name__(self, owner: type, name: str) -> None:
         self.python_name = name
@@ -132,6 +134,8 @@ def Field(
     directives: list[AppliedDirective] | None = None,
     extensions: list[Any] | None = None,
     permission_classes: list[Any] | None = None,
+    private: bool = False,
+    external: bool = False,
 ) -> FieldSpec:
     """Capture GraphQL field metadata as a descriptor or method decorator."""
 
@@ -148,6 +152,8 @@ def Field(
         directives=list(directives or []),
         extensions=list(extensions or []),
         permission_classes=list(permission_classes or []),
+        private=private,
+        external=external,
     )
     if resolver is not None:
         return spec(resolver)

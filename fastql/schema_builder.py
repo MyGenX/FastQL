@@ -12,9 +12,14 @@ from __future__ import annotations
 
 import copy
 import re
-from typing import Any
+from typing import Any, TypeVar
 
-from fastql.decorators.annotations import TypeReference
+from fastql.decorators.annotations import (
+    GenericTypeReference,
+    TypeReference,
+    TypeVarRef,
+    resolve_type_hint,
+)
 from fastql.decorators.registry import DecoratorRegistry, default_registry
 from fastql.errors import GraphQLError
 from fastql.types import (
@@ -32,6 +37,7 @@ from fastql.types import (
     String,
     UnionType,
 )
+from fastql.types.schema import default_directives
 from fastql.types.wrappers import ListType, NonNull
 
 _ROOT_DEFAULT_NAMES = {
@@ -85,6 +91,8 @@ class _SchemaBuilder:
         self.by_name: dict[str, Any] = {}
         self.visited: set[int] = set()
         self.object_types: list[ObjectType] = []
+        #: Synthesized concrete generic types, keyed by their synthetic name.
+        self._generic_cache: dict[str, Any] = {}
         # Index decorated definitions by their Python class name so forward
         # references resolve through the registry regardless of where the class
         # was defined (module level, nested, or inside a function).
@@ -114,6 +122,9 @@ class _SchemaBuilder:
 
         self._validate_interfaces()
 
+        directives = self._collect_directives()
+        self._validate_applied_directives(directives)
+
         return Schema(
             query=query_root,
             mutation=mutation_root,
@@ -121,6 +132,7 @@ class _SchemaBuilder:
             types=extra_ir,
             config=self.config,
             extensions=list(extensions or []),
+            directives=directives,
             _built=True,
         )
 
@@ -241,6 +253,8 @@ class _SchemaBuilder:
             return NonNull(self._resolve_ref(ref.of_type, where))
         if isinstance(ref, ListType):
             return ListType(self._resolve_ref(ref.of_type, where))
+        if isinstance(ref, GenericTypeReference):
+            return self._resolve_ref(self._synthesize_generic(ref, where), where)
         if isinstance(ref, TypeReference):
             resolved = self._lookup_reference(ref)
             if resolved is None:
@@ -277,6 +291,88 @@ class _SchemaBuilder:
         if isinstance(named, _NAMED_TYPES):
             self._resolve_named(named)
 
+    # -- generic type synthesis ----------------------------------------------
+
+    def _synthesize_generic(self, ref: GenericTypeReference, where: str) -> Any:
+        """Concretize ``Template[args]`` into a named type, one per parametrization."""
+        template = ref.template
+        arg_types = [self._named_for_arg(arg, ref.module, where) for arg in ref.args]
+        name = self._generic_name(template, arg_types)
+
+        cached = self._generic_cache.get(name) or self.registry.types_by_name.get(name)
+        if cached is not None:
+            return cached
+
+        mapping = dict(zip(template.type_param_names, arg_types))
+        own_fields = {
+            field_name: self._concretize_field(field_def, mapping)
+            for field_name, field_def in template.fields.items()
+        }
+
+        if template.kind == "interface":
+            concrete: Any = InterfaceType(
+                name, fields=own_fields, description=template.description
+            )
+        elif template.kind == "input":
+            concrete = InputObjectType(
+                name,
+                fields=own_fields,
+                description=template.description,
+                python_type=template.python_type,
+            )
+        else:
+            interfaces = [
+                self._resolve_ref(self._as_named_type(value), where)
+                for value in template.interfaces
+            ]
+            merged: dict[str, Any] = {}
+            for interface in interfaces:
+                merged.update(interface.fields)
+            merged.update(own_fields)
+            concrete = ObjectType(
+                name,
+                fields=merged,
+                interfaces=interfaces,
+                description=template.description,
+            )
+
+        # Synthesis happens after the registry-wide naming pass, so apply field
+        # name conversion to the freshly built type here.
+        if self.config.auto_camel_case:
+            _apply_naming(concrete, set())
+
+        # Memoize before resolving so a self-referential generic terminates.
+        self._generic_cache[name] = concrete
+        self.registry.types_by_name[name] = concrete
+        return concrete
+
+    def _named_for_arg(self, arg: Any, module: str | None, where: str) -> Any:
+        if isinstance(arg, (*_NAMED_TYPES, TypeReference)):
+            named = arg  # already an IR type (e.g. bound from a nested generic)
+        else:
+            named = _unwrap(resolve_type_hint(arg, module=module))
+        return self._resolve_ref(named, f"{where} (generic argument)")
+
+    def _generic_name(self, template: Any, arg_types: list[Any]) -> str:
+        arg_names = [getattr(named, "name", None) or "Unknown" for named in arg_types]
+        if template.name_template:
+            return template.name_template.format(
+                **dict(zip(template.type_param_names, arg_names))
+            )
+        return "".join(arg_names) + template.base_name
+
+    def _concretize_field(self, field_def: Any, mapping: dict[str, Any]) -> Any:
+        new_field = copy.copy(field_def)
+        new_field.type = _substitute_typevars(field_def.type, mapping)
+        if getattr(field_def, "args", None):
+            new_args = {}
+            for arg_name, arg in field_def.args.items():
+                new_arg = copy.copy(arg)
+                new_arg.type = _substitute_typevars(arg.type, mapping)
+                new_args[arg_name] = new_arg
+            new_field.args = new_args
+        return new_field
+
     # -- validation -----------------------------------------------------------
 
     def _validate_interfaces(self) -> None:
@@ -289,11 +385,119 @@ class _SchemaBuilder:
                             f"{field_name!r} from interface {interface.name!r}."
                         )
 
+    # -- custom directives ----------------------------------------------------
+
+    def _collect_directives(self) -> dict[str, Any]:
+        """Merge the built-in directives with any author-defined ones."""
+        merged = dict(default_directives())
+        merged.update(self.registry.directives)
+        return merged
+
+    def _validate_applied_directives(self, known: dict[str, Any]) -> None:
+        """Check applied-directive locations and coerce their arguments."""
+        _LOCATION = {
+            ObjectType: "OBJECT",
+            InterfaceType: "INTERFACE",
+            UnionType: "UNION",
+            EnumType: "ENUM",
+            ScalarType: "SCALAR",
+            InputObjectType: "INPUT_OBJECT",
+        }
+        for type_ in self.by_name.values():
+            location = _LOCATION.get(type(type_))
+            if location is not None:
+                self._check_directives(
+                    getattr(type_, "directives", []), location, known, type_.name
+                )
+            if isinstance(type_, (ObjectType, InterfaceType)):
+                for field_name, field_def in type_.fields.items():
+                    where = f"{type_.name}.{field_name}"
+                    self._check_directives(
+                        field_def.directives, "FIELD_DEFINITION", known, where
+                    )
+                    for arg_name, arg in field_def.args.items():
+                        self._check_directives(
+                            getattr(arg, "directives", []),
+                            "ARGUMENT_DEFINITION",
+                            known,
+                            f"{where}({arg_name}:)",
+                        )
+            elif isinstance(type_, InputObjectType):
+                for field_name, input_field in type_.fields.items():
+                    self._check_directives(
+                        getattr(input_field, "directives", []),
+                        "INPUT_FIELD_DEFINITION",
+                        known,
+                        f"{type_.name}.{field_name}",
+                    )
+
+    def _check_directives(
+        self, applied: list, location: str, known: dict[str, Any], where: str
+    ) -> None:
+        from fastql.execution.values import coerce_input_value
+
+        for directive in applied:
+            definition = known.get(directive.name)
+            if definition is None:
+                continue  # unknown/federation directives pass through unchecked
+            if location not in definition.locations:
+                raise SchemaBuildError(
+                    f"Directive @{directive.name} is not allowed on {location} "
+                    f"(applied to {where}); valid locations: "
+                    f"{', '.join(definition.locations)}."
+                )
+            for arg_name, value in (directive.arguments or {}).items():
+                if arg_name not in definition.args:
+                    raise SchemaBuildError(
+                        f"Unknown argument {arg_name!r} for directive "
+                        f"@{directive.name} on {where}."
+                    )
+                try:
+                    coerce_input_value(
+                        value,
+                        definition.args[arg_name].type,
+                        f"@{directive.name}({arg_name}:)",
+                    )
+                except GraphQLError as error:
+                    raise SchemaBuildError(str(error))
+
 
 def _unwrap(type_ref: Any) -> Any:
     while isinstance(type_ref, (NonNull, ListType)):
         type_ref = type_ref.of_type
     return type_ref
+
+
+def _substitute_typevars(ref: Any, mapping: dict[str, Any]) -> Any:
+    """Replace :class:`TypeVarRef` placeholders with their bound named types.
+
+    Also descends into a nested :class:`GenericTypeReference` (e.g. ``Edge[T]``
+    inside ``Connection[T]``), binding its type-variable arguments.
+    """
+    if isinstance(ref, NonNull):
+        return NonNull(_substitute_typevars(ref.of_type, mapping))
+    if isinstance(ref, ListType):
+        return ListType(_substitute_typevars(ref.of_type, mapping))
+    if isinstance(ref, TypeVarRef):
+        bound = mapping.get(ref.name)
+        if bound is None:
+            raise SchemaBuildError(
+                f"Unbound type variable {ref.name!r} in a generic type."
+            )
+        return bound
+    if isinstance(ref, GenericTypeReference):
+        new_args = tuple(_bind_generic_arg(arg, mapping) for arg in ref.args)
+        return GenericTypeReference(ref.template, new_args, ref.module)
+    return ref
+
+
+def _bind_generic_arg(arg: Any, mapping: dict[str, Any]) -> Any:
+    """Bind a nested generic's argument when it is one of the outer type vars."""
+    if isinstance(arg, TypeVar):
+        return mapping.get(arg.__name__, arg)
+    if isinstance(arg, str):
+        return mapping.get(arg, arg)
+    return arg
 
 
 def _prepare_registry(

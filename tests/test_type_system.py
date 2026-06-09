@@ -123,3 +123,64 @@ def test_schema_accepts_explicit_unreachable_types():
     schema = Schema(query, types=[orphan])
 
     assert schema.type_map["Orphan"] is orphan
+
+
+# --- per-member enum customization (decorator API) --------------------------
+
+import enum as _enum  # noqa: E402
+
+from fastql import Enum, Field as _Field, Query as _Query, Schema as _Schema  # noqa: E402
+from fastql import enum_value, execute as _execute, print_schema as _print_schema  # noqa: E402
+from fastql.context import default_dependencies as _default_dependencies  # noqa: E402
+from fastql.decorators import default_registry as _default_registry  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _clear_decorator_registries():
+    _default_registry.clear()
+    _default_dependencies.clear()
+
+
+def test_enum_value_customizes_description_deprecation_and_name():
+    @Enum
+    class Color(_enum.Enum):
+        RED = "red"
+        GREEN = enum_value("green", description="leafy", deprecation_reason="use RED")
+        BLUE = enum_value("blue", name="AZURE")
+
+    enum_type = Color.__fastql_type__
+    assert set(enum_type.values) == {"RED", "GREEN", "AZURE"}  # BLUE renamed
+    assert enum_type.values["GREEN"].description == "leafy"
+    assert enum_type.values["GREEN"].deprecation_reason == "use RED"
+    assert enum_type.values["AZURE"].python_name == "BLUE"
+
+
+async def test_renamed_enum_value_serializes_to_graphql_name():
+    @Enum
+    class Color(_enum.Enum):
+        BLUE = enum_value("blue", name="AZURE")
+
+    @_Query
+    class Q:
+        @_Field
+        def color(self) -> Color:
+            return Color.BLUE
+
+    result = await _execute(_Schema(query=Q), "{ color }")
+    assert result.data == {"color": "AZURE"}
+
+
+def test_enum_value_deprecation_rendered_in_sdl():
+    @Enum
+    class Color(_enum.Enum):
+        RED = "red"
+        GREEN = enum_value("green", deprecation_reason="use RED")
+
+    @_Query
+    class Q:
+        @_Field
+        def color(self) -> Color:
+            return Color.RED
+
+    sdl = _print_schema(_Schema(query=Q))
+    assert 'GREEN @deprecated(reason: "use RED")' in sdl

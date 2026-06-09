@@ -8,7 +8,7 @@ import types
 import typing
 from dataclasses import dataclass
 from enum import Enum as PythonEnum
-from typing import Any, ForwardRef, get_args, get_origin
+from typing import AbstractSet, Any, ForwardRef, TypeVar, get_args, get_origin
 
 from fastql.types import (
     Boolean,
@@ -61,6 +61,26 @@ class TypeReference:
         return f"TypeReference({self.name!r})"
 
 
+@dataclass(frozen=True)
+class TypeVarRef:
+    """Placeholder for a generic ``TypeVar`` inside a generic type's field.
+
+    Synthesis (:mod:`fastql.schema_builder`) replaces it with the concrete named
+    type bound to ``name`` at each parametrization site.
+    """
+
+    name: str
+
+
+@dataclass(frozen=True)
+class GenericTypeReference:
+    """A reference to ``Template[arg, ...]`` resolved to a concrete type at build."""
+
+    template: Any
+    args: tuple[Any, ...]
+    module: str | None = None
+
+
 _SCALAR_HINTS: dict[Any, ScalarType] = {
     int: Int,
     float: Float,
@@ -79,43 +99,73 @@ def resolve_type_hint(
     *,
     module: str | None = None,
     required: bool = True,
+    type_params: AbstractSet[str] = frozenset(),
 ) -> Any:
     """Resolve a Python type hint into a GraphQL type reference.
 
     Bare hints are non-null by default. ``Optional`` / ``X | None`` removes only
     the outer non-null wrapper, while list elements remain non-null unless they
-    are explicitly optional.
+    are explicitly optional. ``type_params`` names the in-scope ``TypeVar`` s of a
+    generic type; matching hints become :class:`TypeVarRef` placeholders.
     """
 
-    resolved = _resolve_type_hint(hint, module=module, required=required)
+    resolved = _resolve_type_hint(
+        hint, module=module, required=required, type_params=type_params
+    )
     return resolved
 
 
-def _resolve_type_hint(hint: Any, *, module: str | None, required: bool) -> Any:
+def _resolve_type_hint(
+    hint: Any, *, module: str | None, required: bool, type_params: AbstractSet[str]
+) -> Any:
+    if isinstance(hint, TypeVar):
+        return _wrap(TypeVarRef(hint.__name__), required)
     if isinstance(hint, str):
-        return _resolve_string_hint(hint, module=module, required=required)
+        return _resolve_string_hint(
+            hint, module=module, required=required, type_params=type_params
+        )
     if isinstance(hint, ForwardRef):
-        return _wrap(TypeReference(hint.__forward_arg__, module), required)
+        name = hint.__forward_arg__
+        if name in type_params:
+            return _wrap(TypeVarRef(name), required)
+        return _wrap(TypeReference(name, module), required)
 
     origin = get_origin(hint)
     args = get_args(hint)
 
     if origin is typing.Annotated:
-        return _resolve_type_hint(args[0], module=module, required=required)
+        return _resolve_type_hint(
+            args[0], module=module, required=required, type_params=type_params
+        )
 
     if origin in _ASYNC_STREAM_ORIGINS:
         inner = args[0] if args else Any
-        return _resolve_type_hint(inner, module=module, required=required)
+        return _resolve_type_hint(
+            inner, module=module, required=required, type_params=type_params
+        )
 
     if origin in (typing.Union, types.UnionType) or isinstance(hint, types.UnionType):
         union_args = args or get_args(hint)
         non_none = [arg for arg in union_args if arg is not NoneType]
         if len(non_none) == 1 and len(non_none) != len(union_args):
-            return _resolve_type_hint(non_none[0], module=module, required=False)
+            return _resolve_type_hint(
+                non_none[0], module=module, required=False, type_params=type_params
+            )
+
+    if origin is not None and getattr(origin, "__fastql_generic__", None) is not None and args:
+        ref = GenericTypeReference(origin.__fastql_generic__, tuple(args), module)
+        return _wrap(ref, required)
 
     if origin in (list, typing.List):
         inner = args[0] if args else Any
-        return _wrap(ListType(_resolve_type_hint(inner, module=module, required=True)), required)
+        return _wrap(
+            ListType(
+                _resolve_type_hint(
+                    inner, module=module, required=True, type_params=type_params
+                )
+            ),
+            required,
+        )
 
     scalar = _scalar_for_hint(hint)
     if scalar is not None:
@@ -143,7 +193,9 @@ def _resolve_type_hint(hint: Any, *, module: str | None, required: bool) -> Any:
     raise TypeError(f"Cannot infer a GraphQL type from annotation {hint!r}")
 
 
-def _resolve_string_hint(hint: str, *, module: str | None, required: bool) -> Any:
+def _resolve_string_hint(
+    hint: str, *, module: str | None, required: bool, type_params: AbstractSet[str]
+) -> Any:
     text = hint.strip()
     if (text.startswith("'") and text.endswith("'")) or (
         text.startswith('"') and text.endswith('"')
@@ -154,25 +206,77 @@ def _resolve_string_hint(hint: str, *, module: str | None, required: bool) -> An
         if text.startswith(prefix + "[") and text.endswith("]"):
             inner = text[len(prefix) + 1 : -1]
             yielded = _first_type_arg(inner).strip()
-            return _resolve_string_hint(yielded, module=module, required=required)
+            return _resolve_string_hint(
+                yielded, module=module, required=required, type_params=type_params
+            )
 
     if text.endswith(" | None"):
-        return _resolve_string_hint(text[: -len(" | None")], module=module, required=False)
+        return _resolve_string_hint(
+            text[: -len(" | None")], module=module, required=False, type_params=type_params
+        )
     if text.startswith("Optional[") and text.endswith("]"):
-        return _resolve_string_hint(text[len("Optional[") : -1], module=module, required=False)
+        return _resolve_string_hint(
+            text[len("Optional[") : -1], module=module, required=False, type_params=type_params
+        )
     if text.startswith("typing.Optional[") and text.endswith("]"):
         return _resolve_string_hint(
-            text[len("typing.Optional[") : -1], module=module, required=False
+            text[len("typing.Optional[") : -1], module=module, required=False,
+            type_params=type_params,
         )
     if (text.startswith("list[") or text.startswith("List[")) and text.endswith("]"):
         inner = text[text.index("[") + 1 : -1]
-        inner_ref = _resolve_string_hint(inner, module=module, required=True)
+        inner_ref = _resolve_string_hint(
+            inner, module=module, required=True, type_params=type_params
+        )
         return _wrap(ListType(inner_ref), required)
+
+    if text in type_params:
+        return _wrap(TypeVarRef(text), required)
+
+    if text.endswith("]") and "[" in text:
+        generic = _string_generic_reference(text, module)
+        if generic is not None:
+            return _wrap(generic, required)
 
     scalar = _scalar_for_hint(text)
     if scalar is not None:
         return _wrap(scalar, required)
     return _wrap(TypeReference(text, module), required)
+
+
+def _string_generic_reference(text: str, module: str | None) -> "GenericTypeReference | None":
+    """Build a :class:`GenericTypeReference` from a ``Name[arg, ...]`` string."""
+    base = text[: text.index("[")].strip()
+    cls = _lookup_name(base, module)
+    template = getattr(cls, "__fastql_generic__", None) if cls is not None else None
+    if template is None:
+        return None
+    inner = text[text.index("[") + 1 : -1]
+    arg_texts = [part.strip() for part in _split_top_level(inner)]
+    args = tuple(_lookup_name(part, module) or part for part in arg_texts)
+    return GenericTypeReference(template, args, module)
+
+
+def _lookup_name(name: str, module: str | None) -> Any:
+    mod = sys.modules.get(module or "")
+    return getattr(mod, name, None) if mod is not None else None
+
+
+def _split_top_level(text: str) -> list[str]:
+    """Split a generic's inner text on top-level commas."""
+    parts: list[str] = []
+    depth = 0
+    start = 0
+    for index, char in enumerate(text):
+        if char in "[(":
+            depth += 1
+        elif char in "])":
+            depth -= 1
+        elif char == "," and depth == 0:
+            parts.append(text[start:index])
+            start = index + 1
+    parts.append(text[start:])
+    return [part for part in parts if part.strip()]
 
 
 def _first_type_arg(text: str) -> str:
@@ -212,4 +316,10 @@ def unwrap_non_null(type_: Any) -> Any:
     return type_
 
 
-__all__ = ["TypeReference", "resolve_type_hint", "unwrap_non_null"]
+__all__ = [
+    "TypeReference",
+    "TypeVarRef",
+    "GenericTypeReference",
+    "resolve_type_hint",
+    "unwrap_non_null",
+]

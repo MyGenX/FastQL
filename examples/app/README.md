@@ -23,9 +23,9 @@ python -m fastql export-schema examples.app:schema
 | Concept | File | What it shows |
 | --- | --- | --- |
 | `@Scalar` | [`scalars.py`](scalars.py) | `DateTime` with `serialize` / `parse_value` / `parse_literal` |
-| `@Enum` | [`enums.py`](enums.py) | `Role`, `PostStatus` from `enum.Enum` |
+| `@Enum` | [`enums.py`](enums.py) | `Role`, `PostStatus`, including per-member description/deprecation metadata |
 | `@Interface` | [`interfaces.py`](interfaces.py) | `Node`, implemented by every object type |
-| `@Type` + `@Union` | [`types.py`](types.py) | `User` / `Post` / `Comment`; `SearchResult = User \| Post`; computed fields |
+| `@Type` + `@Union` | [`types.py`](types.py) | `User` / `Post` / `Comment`; `SearchResult = User \| Post`; computed and private fields |
 | `@Input` | [`inputs.py`](inputs.py) | `CreatePostInput`, `PostFilter` (incl. a scalar as input) |
 | `DataLoader` | [`loaders.py`](loaders.py) | batched relationship loads via `get_loader` (no N+1) |
 | `@Query` | [`queries.py`](queries.py) | `node`, `user(s)`, `posts(filter)`, `search`, `me`, `serverTime` |
@@ -39,6 +39,11 @@ python -m fastql export-schema examples.app:schema
 | Data | [`data.py`](data.py) | in-memory `Store` + `reseed()` |
 | Pub/Sub | [`pubsub.py`](pubsub.py) | tiny async fan-out backing subscriptions |
 | Assembly | [`schema.py`](schema.py) | `Schema(query=…, mutation=…, subscription=…, extensions=[…])` |
+
+For isolated examples of generic types, Relay global IDs/connections, custom directives,
+external fields, and enum name overrides, see the
+[`examples/advanced`](../advanced) cookbook. Relay stays separate because this schema's
+application-specific `Node` uses integer IDs rather than Relay global `ID` values.
 
 ## Subscriptions caveat
 

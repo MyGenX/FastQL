@@ -31,6 +31,10 @@ class DecoratorRegistry:
     root_classes: dict[str, list[type]] = field(
         default_factory=lambda: {"query": [], "mutation": [], "subscription": []}
     )
+    #: Deferred generic type templates (``Generic[T]`` classes), keyed by class.
+    generic_templates: dict[Any, Any] = field(default_factory=dict)
+    #: Author-defined directive definitions, keyed by GraphQL name.
+    directives: dict[str, Any] = field(default_factory=dict)
 
     def register_type(self, python_obj: Any, type_: NamedType) -> NamedType:
         self.types_by_python[python_obj] = type_
@@ -55,6 +59,11 @@ class DecoratorRegistry:
             pass  # bound methods don't accept attributes; the registry entry suffices
         return definition
 
+    def register_directive(self, python_obj: Any, definition: Any) -> Any:
+        self.directives[definition.name] = definition
+        setattr(python_obj, "__fastql_directive__", definition)
+        return definition
+
     def register_root(self, operation: str, python_obj: type, type_: ObjectType) -> None:
         self.root_types_by_python[python_obj] = type_
         if python_obj not in self.root_classes[operation]:
@@ -68,6 +77,8 @@ class DecoratorRegistry:
         self.operations = {"query": {}, "mutation": {}, "subscription": {}}
         self.root_types_by_python.clear()
         self.root_classes = {"query": [], "mutation": [], "subscription": []}
+        self.generic_templates.clear()
+        self.directives.clear()
 
 
 default_registry = DecoratorRegistry()

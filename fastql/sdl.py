@@ -57,7 +57,8 @@ def _render_fields_block(keyword: str, type_: Any, interfaces: list) -> str:
     impl = ""
     if interfaces:
         impl = " implements " + " & ".join(i.name for i in interfaces)
-    lines = [f"{keyword} {type_.name}{impl} {{"]
+    directives = _render_directives(getattr(type_, "directives", []))
+    lines = [f"{keyword} {type_.name}{impl}{directives} {{"]
     for name, field in type_.fields.items():
         if name.startswith("__"):
             continue
@@ -75,12 +76,15 @@ def _render_field(name: str, field: Any) -> str:
     out = f"{name}{args}: {_render_type_ref(field.type)}"
     if field.deprecation_reason:
         out += f" @deprecated(reason: {json.dumps(field.deprecation_reason)})"
+    if getattr(field, "external", False):
+        out += " @external"
     out += _render_directives(getattr(field, "directives", []))
     return out
 
 
 def _render_input_block(type_: InputObjectType) -> str:
-    lines = [f"input {type_.name} {{"]
+    directives = _render_directives(getattr(type_, "directives", []))
+    lines = [f"input {type_.name}{directives} {{"]
     for name, input_field in type_.fields.items():
         lines.append("  " + _render_input_value(name, input_field))
     lines.append("}")
@@ -99,7 +103,8 @@ def _render_input_value(name: str, value: Any) -> str:
 
 
 def _render_enum(type_: EnumType) -> str:
-    lines = [f"enum {type_.name} {{"]
+    directives = _render_directives(getattr(type_, "directives", []))
+    lines = [f"enum {type_.name}{directives} {{"]
     for name, enum_value in type_.values.items():
         line = "  " + name
         if enum_value.deprecation_reason:

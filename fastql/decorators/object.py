@@ -14,18 +14,29 @@ def _class_decorator(kind: str, cls=None, **options):
     return decorate(cls) if cls is not None else decorate
 
 
-def Type(cls: type | None = None, *, name=None, description=None, interfaces=None):
+def Type(
+    cls: type | None = None, *, name=None, description=None, interfaces=None, directives=None
+):
     return _class_decorator(
-        "type", cls, name=name, description=description, interfaces=interfaces
+        "type",
+        cls,
+        name=name,
+        description=description,
+        interfaces=interfaces,
+        directives=directives,
     )
 
 
-def Interface(cls: type | None = None, *, name=None, description=None):
-    return _class_decorator("interface", cls, name=name, description=description)
+def Interface(cls: type | None = None, *, name=None, description=None, directives=None):
+    return _class_decorator(
+        "interface", cls, name=name, description=description, directives=directives
+    )
 
 
-def Input(cls: type | None = None, *, name=None, description=None):
-    return _class_decorator("input", cls, name=name, description=description)
+def Input(cls: type | None = None, *, name=None, description=None, directives=None):
+    return _class_decorator(
+        "input", cls, name=name, description=description, directives=directives
+    )
 
 
 __all__ = ["Input", "Interface", "Type"]

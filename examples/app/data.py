@@ -82,8 +82,8 @@ def reseed() -> Store:
     """Reset :data:`STORE` to its seed state, in place."""
     s = STORE
     s.users = {
-        1: User(id=1, name="Ada Lovelace", role=Role.ADMIN),
-        2: User(id=2, name="Grace Hopper", role=Role.MEMBER),
+        1: User(id=1, name="Ada Lovelace", role=Role.ADMIN, sort_key="01"),
+        2: User(id=2, name="Grace Hopper", role=Role.MEMBER, sort_key="02"),
     }
     s.posts = {
         10: Post(10, "On the Analytical Engine", "First algorithm.", PostStatus.PUBLISHED, _ts(1)),

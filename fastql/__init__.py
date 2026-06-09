@@ -34,6 +34,7 @@ from fastql.decorators import (
     Arg,
     Argument,
     BasePermission,
+    Directive,
     Enum,
     Field,
     FieldExtension,
@@ -45,6 +46,7 @@ from fastql.decorators import (
     Subscription,
     Type,
     Union,
+    enum_value,
 )
 from fastql.errors import GraphQLError, GraphQLSyntaxError, ValidationError
 from fastql.execution import ExecutionResult, execute, subscribe
@@ -86,6 +88,8 @@ __all__ = [
     "Arg",
     "Argument",
     "AppliedDirective",
+    "Directive",
+    "enum_value",
     "BasePermission",
     "FieldExtension",
     "SchemaExtension",

@@ -27,6 +27,11 @@ class User:
     id: int
     name: str
     role: Role = Field(default=Role.MEMBER)
+    sort_key: str = Field(default="member", private=True)
+
+    @Field
+    def directory_label(self) -> str:
+        return f"{self.sort_key}: {self.name}"
 
     @Field
     def loud_name(self) -> str:
