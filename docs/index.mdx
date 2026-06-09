@@ -5,60 +5,196 @@ mode: custom
 og:image: /images/og-fastql.png
 ---
 
-<div className="fastql-hero">
-  <div className="fastql-hero__eyebrow">Python-native GraphQL</div>
-  <h1>FastQL</h1>
-  <p className="fastql-hero__lede">
-    Define schemas with Python annotations, apply explicit GraphQL metadata when it matters,
-    and run the same model through validation, execution, SDL, introspection, and local tooling.
-  </p>
-  <div className="fastql-actions">
-    <a className="fastql-action fastql-action--primary" href="/start/quickstart">Build your first schema</a>
-    <a className="fastql-action" href="/architecture/overview">Read the architecture</a>
-  </div>
+<div className="fastql-page">
+  <section className="fastql-hero">
+    <div className="fastql-shell fastql-hero__layout">
+      <div className="fastql-hero__copy">
+        <div className="fastql-eyebrow">Python-native GraphQL</div>
+        <h1>Build GraphQL services in Python, end to end.</h1>
+        <p className="fastql-hero__lede">
+          FastQL turns Python annotations into a complete GraphQL system: schema authoring,
+          validation, execution, SDL, introspection, and local tooling in one coherent API.
+        </p>
+        <div className="fastql-actions">
+          <a className="fastql-action fastql-action--primary" href="/start/quickstart">
+            Build your first schema
+          </a>
+          <a className="fastql-action" href="/architecture/overview">
+            Explore the architecture
+          </a>
+        </div>
+      </div>
+
+      <div className="fastql-code-card" aria-label="FastQL schema and execution example">
+        <div className="fastql-code-card__bar">
+          <span className="fastql-code-card__dot" aria-hidden="true"></span>
+          <span className="fastql-code-card__dot" aria-hidden="true"></span>
+          <span className="fastql-code-card__dot" aria-hidden="true"></span>
+          <span className="fastql-code-card__file">schema.py</span>
+        </div>
+        <pre className="fastql-code-card__code"><code>{[
+          "from fastql import Field, Query, Schema, Type",
+          "",
+          "@Type",
+          "class User:",
+          "    id: int",
+          "    name: str",
+          "",
+          "@Query",
+          "class QueryRoot:",
+          "    @Field",
+          "    def user(self, id: int) -> User:",
+          "        return User(id, \"Ada\")",
+          "",
+          "schema = Schema(query=QueryRoot)",
+        ].join("\n")}</code></pre>
+        <div className="fastql-code-card__result">
+          <span>result.data</span>
+          <code>{`{"user": {"id": 1, "name": "Ada"}}`}</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="fastql-value-strip" aria-label="FastQL product principles">
+    <div className="fastql-shell fastql-value-strip__grid">
+      <div>
+        <span className="fastql-value-strip__metric">Zero</span>
+        <span>runtime dependencies</span>
+      </div>
+      <div>
+        <span className="fastql-value-strip__metric">One</span>
+        <span>schema model across the stack</span>
+      </div>
+      <div>
+        <span className="fastql-value-strip__metric">Any</span>
+        <span>supported Python web framework</span>
+      </div>
+    </div>
+  </section>
+
+  <section className="fastql-section">
+    <div className="fastql-shell">
+      <div className="fastql-section__heading">
+        <div className="fastql-eyebrow">One coherent model</div>
+        <h2>Author naturally. Stay explicit where it matters.</h2>
+        <p>
+          Use Python's type system for the common path, then add focused GraphQL metadata
+          without switching to a separate schema language or execution engine.
+        </p>
+      </div>
+
+      <div className="fastql-feature-grid">
+        <div className="fastql-feature-card">
+          <span className="fastql-feature-card__index">01</span>
+          <h3>Python-first definitions</h3>
+          <p>
+            Model objects, inputs, interfaces, unions, enums, and operations with familiar
+            classes, annotations, and decorators.
+          </p>
+          <a href="/build/types-and-fields">Define schema types</a>
+        </div>
+        <div className="fastql-feature-card">
+          <span className="fastql-feature-card__index">02</span>
+          <h3>Built-in execution</h3>
+          <p>
+            Parse, validate, coerce, resolve, and serialize through FastQL's own async-first
+            execution pipeline.
+          </p>
+          <a href="/architecture/validation-and-execution">Follow execution</a>
+        </div>
+        <div className="fastql-feature-card">
+          <span className="fastql-feature-card__index">03</span>
+          <h3>Framework-independent core</h3>
+          <p>
+            Reuse the same schema with raw ASGI, FastAPI, Starlette, Flask, or Django and
+            keep transport details outside your domain model.
+          </p>
+          <a href="/integrations/overview">Choose an integration</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="fastql-section fastql-section--tinted">
+    <div className="fastql-shell">
+      <div className="fastql-section__heading fastql-section__heading--compact">
+        <div className="fastql-eyebrow">From source to response</div>
+        <h2>A visible pipeline, not a black box.</h2>
+      </div>
+
+      <div className="fastql-workflow">
+        <div className="fastql-workflow__step">
+          <span>1</span>
+          <div className="fastql-workflow__title">Define</div>
+          <p>Decorators and Python types</p>
+        </div>
+        <div className="fastql-workflow__step">
+          <span>2</span>
+          <div className="fastql-workflow__title">Compile</div>
+          <p>Registry and GraphQL schema</p>
+        </div>
+        <div className="fastql-workflow__step">
+          <span>3</span>
+          <div className="fastql-workflow__title">Execute</div>
+          <p>Validation and resolvers</p>
+        </div>
+        <div className="fastql-workflow__step">
+          <span>4</span>
+          <div className="fastql-workflow__title">Inspect</div>
+          <p>SDL, introspection, and tooling</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section className="fastql-section">
+    <div className="fastql-shell fastql-inspect">
+      <div className="fastql-inspect__copy">
+        <div className="fastql-eyebrow">Local tooling included</div>
+        <h2>Inspect the service while you build it.</h2>
+        <p>
+          Start FastQL's development server to explore operations in GraphiQL, call the
+          GraphQL endpoint, and inspect generated SDL or introspection JSON.
+        </p>
+        <div className="fastql-command">
+          <span aria-hidden="true">$</span>
+          <code>python -m fastql serve examples.app:schema</code>
+        </div>
+        <a className="fastql-text-link" href="/tooling/dev-server">Open the dev-server guide</a>
+      </div>
+      <div className="fastql-preview">
+        <img
+          src="/images/playground.png"
+          alt="FastQL GraphQL playground showing a hello query and JSON response"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section className="fastql-section fastql-section--last">
+    <div className="fastql-shell">
+      <div className="fastql-section__heading fastql-section__heading--compact">
+        <div className="fastql-eyebrow">Choose your route</div>
+        <h2>Start with the part of FastQL you need.</h2>
+      </div>
+      <div className="fastql-route-cards">
+        <a href="/start/quickstart">
+          <span>Application developers</span>
+          <div className="fastql-route-cards__title">Build a schema and run your first query.</div>
+          <span className="fastql-route-cards__cta">Quickstart →</span>
+        </a>
+        <a href="/integrations/overview">
+          <span>Framework integrators</span>
+          <div className="fastql-route-cards__title">Connect HTTP, context, and application services.</div>
+          <span className="fastql-route-cards__cta">Integrations →</span>
+        </a>
+        <a href="/contribute/development">
+          <span>Contributors</span>
+          <div className="fastql-route-cards__title">Work on the language and execution pipeline.</div>
+          <span className="fastql-route-cards__cta">Development guide →</span>
+        </a>
+      </div>
+    </div>
+  </section>
 </div>
-
-<section className="fastql-section">
-  <h2>One schema model, end to end</h2>
-  <div className="fastql-grid">
-    <div className="fastql-feature">
-      <h3>Python-first definitions</h3>
-      <p>Use annotations for the common path and <code>Field</code> or <code>Arg</code> when GraphQL-specific control is required.</p>
-    </div>
-    <div className="fastql-feature">
-      <h3>Unified decorators</h3>
-      <p>Types, inputs, interfaces, operations, enums, unions, and scalars share one predictable metadata contract.</p>
-    </div>
-    <div className="fastql-feature">
-      <h3>Built-in execution</h3>
-      <p>Parse, validate, coerce, resolve, and serialize without handing the schema to a separate execution engine.</p>
-    </div>
-  </div>
-</section>
-
-<section className="fastql-section">
-  <h2>From source to response</h2>
-  <div className="fastql-architecture">
-    <div><strong>Define</strong><span>Decorators and Python types</span></div>
-    <div><strong>Compile</strong><span>Registry and GraphQL schema</span></div>
-    <div><strong>Execute</strong><span>Validation and resolvers</span></div>
-    <div><strong>Inspect</strong><span>SDL, introspection, playground</span></div>
-  </div>
-</section>
-
-<section className="fastql-section">
-  <h2>Inspect the running service</h2>
-  <p>The development server exposes the GraphQL endpoint, interactive playground, generated SDL, and introspection JSON.</p>
-  <div className="fastql-preview">
-    <img src="/images/playground.png" alt="FastQL GraphQL playground showing a hello query and JSON response" />
-  </div>
-</section>
-
-<section className="fastql-section">
-  <h2>Choose your route</h2>
-  <CardGroup cols={3}>
-    <Card title="Application developers" icon="code" href="/start/quickstart">Build a schema and run a query.</Card>
-    <Card title="Framework integrators" icon="blocks" href="/resolve/context-and-info">Connect context, dependencies, and policy.</Card>
-    <Card title="Contributors" icon="git-pull-request" href="/contribute/development">Work on the language and execution pipeline.</Card>
-  </CardGroup>
-</section>

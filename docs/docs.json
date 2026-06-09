@@ -16,6 +16,11 @@
   "appearance": {
     "default": "system"
   },
+  "seo": {
+    "metatags": {
+      "canonical": "https://fastql.vachagan.dev"
+    }
+  },
   "navigation": {
     "groups": [
       {

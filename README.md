@@ -7,9 +7,10 @@ and a **web-framework-agnostic core** — zero runtime dependencies, Python 3.11
 > Status: early development. The core engine (parse → build → validate → execute, with
 > dependency injection and introspection) is in place.
 
-**Documentation:** Start with the [FastQL documentation](docs/index.mdx), then use the
-[capability catalog](docs/specifications/capability-catalog.mdx) to trace documented
-behavior to its canonical OpenSpec requirements.
+**Documentation:** Start at [fastql.vachagan.dev](https://fastql.vachagan.dev), then use
+the [capability catalog](https://fastql.vachagan.dev/specifications/capability-catalog)
+to trace documented behavior to its canonical OpenSpec requirements. Documentation
+sources and publishing instructions live under [`docs/`](docs/README.md).
 
 ## Quickstart
 

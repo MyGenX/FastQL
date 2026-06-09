@@ -4,133 +4,471 @@
   --fastql-line: #dce4df;
   --fastql-green: #15803d;
   --fastql-green-dark: #11652f;
-  --fastql-amber: #f59e0b;
+  --fastql-green-soft: #e9f5ed;
   --fastql-surface: #f7faf8;
+  --fastql-panel: #ffffff;
+  --fastql-code: #101713;
+  --fastql-code-line: #2c3b32;
+  --fastql-code-muted: #9db0a3;
+  --fastql-gutter: clamp(1.25rem, 3vw, 2rem);
 }
 
-.fastql-hero {
-  min-height: min(72vh, 720px);
-  display: grid;
-  align-content: center;
-  padding: 5rem 0 3.5rem;
-  border-bottom: 1px solid var(--fastql-line);
-  background-image:
-    linear-gradient(var(--fastql-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--fastql-line) 1px, transparent 1px);
-  background-size: 48px 48px;
-  background-position: -1px -1px;
+.fastql-page,
+.fastql-page * {
+  box-sizing: border-box;
 }
 
-.fastql-hero__eyebrow {
+.fastql-page {
+  width: 100%;
+  overflow: clip;
+  color: var(--fastql-ink);
+  background: var(--fastql-panel);
+}
+
+.fastql-shell {
+  width: 100%;
+  max-width: 1244px;
+  margin-inline: auto;
+  padding-inline: var(--fastql-gutter);
+}
+
+.fastql-eyebrow {
   color: var(--fastql-green-dark);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0;
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
+.fastql-hero {
+  position: relative;
+  display: grid;
+  min-height: min(760px, calc(100vh - 4rem));
+  align-items: center;
+  padding-block: clamp(4.5rem, 8vw, 7rem);
+  border-bottom: 1px solid var(--fastql-line);
+  background-color: var(--fastql-panel);
+  background-image:
+    linear-gradient(rgb(220 228 223 / 58%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(220 228 223 / 58%) 1px, transparent 1px),
+    radial-gradient(circle at 78% 42%, rgb(34 197 94 / 10%), transparent 32rem);
+  background-position: -1px -1px, -1px -1px, center;
+  background-size: 48px 48px, 48px 48px, auto;
+}
+
+.fastql-hero::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--fastql-panel) 0%, transparent 48%);
+  content: "";
+  pointer-events: none;
+}
+
+.fastql-hero__layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+  gap: clamp(3rem, 7vw, 6rem);
+  align-items: center;
+}
+
+.fastql-hero__copy {
+  min-width: 0;
+}
+
 .fastql-hero h1 {
-  max-width: 900px;
-  margin: 0.8rem 0 1rem;
+  max-width: 740px;
+  margin: 0.9rem 0 1.25rem;
   color: var(--fastql-ink);
-  font-size: clamp(3.5rem, 8vw, 7rem);
-  line-height: 0.96;
-  letter-spacing: 0;
+  font-size: clamp(3.25rem, 5.7vw, 5.6rem);
+  font-weight: 720;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
 }
 
 .fastql-hero__lede {
-  max-width: 720px;
+  max-width: 650px;
+  margin: 0;
   color: var(--fastql-muted);
-  font-size: 1.24rem;
-  line-height: 1.65;
+  font-size: clamp(1.05rem, 1.5vw, 1.22rem);
+  line-height: 1.7;
 }
 
 .fastql-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.75rem;
+  margin-top: 2rem;
 }
 
 .fastql-action {
   display: inline-flex;
+  min-height: 46px;
   align-items: center;
-  min-height: 44px;
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--fastql-ink);
-  border-radius: 6px;
+  justify-content: center;
+  padding: 0.72rem 1.05rem;
+  border: 1px solid var(--fastql-line);
+  border-radius: 8px;
   color: var(--fastql-ink);
-  font-weight: 650;
+  background: rgb(255 255 255 / 78%);
+  font-size: 0.94rem;
+  font-weight: 680;
+  line-height: 1.2;
   text-decoration: none;
+  box-shadow: 0 1px 2px rgb(23 33 27 / 4%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.fastql-action:hover {
+  border-color: var(--fastql-green);
+  box-shadow: 0 8px 22px rgb(23 33 27 / 9%);
+  transform: translateY(-1px);
 }
 
 .fastql-action--primary {
   border-color: var(--fastql-green);
+  color: #ffffff;
   background: var(--fastql-green);
-  color: white;
 }
 
-.fastql-section {
-  padding: 3.5rem 0;
-  border-bottom: 1px solid var(--fastql-line);
+.fastql-action--primary:hover {
+  border-color: var(--fastql-green-dark);
+  background: var(--fastql-green-dark);
 }
 
-.fastql-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  border: 1px solid var(--fastql-line);
-  background: var(--fastql-line);
+.fastql-action:focus-visible,
+.fastql-feature-card a:focus-visible,
+.fastql-text-link:focus-visible,
+.fastql-route-cards a:focus-visible {
+  outline: 3px solid rgb(34 197 94 / 42%);
+  outline-offset: 3px;
 }
 
-.fastql-feature {
+.fastql-code-card {
   min-width: 0;
-  padding: 1.4rem;
-  background: white;
+  overflow: hidden;
+  border: 1px solid var(--fastql-code-line);
+  border-radius: 14px;
+  color: #dce8df;
+  background: var(--fastql-code);
+  box-shadow: 0 28px 70px rgb(23 33 27 / 20%);
 }
 
-.fastql-feature h3 {
-  margin: 0 0 0.55rem;
-  color: var(--fastql-ink);
-  font-size: 1rem;
-  letter-spacing: 0;
+.fastql-code-card__bar {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.42rem;
+  padding-inline: 1rem;
+  border-bottom: 1px solid var(--fastql-code-line);
+  color: var(--fastql-code-muted);
+  background: #151f19;
 }
 
-.fastql-feature p {
+.fastql-code-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #526359;
+}
+
+.fastql-code-card__dot:first-child {
+  background: #f59e0b;
+}
+
+.fastql-code-card__dot:nth-child(2) {
+  background: #4ade80;
+}
+
+.fastql-code-card__file {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.76rem;
+}
+
+.fastql-code-card__code {
+  max-width: 100%;
   margin: 0;
-  color: var(--fastql-muted);
-  line-height: 1.6;
+  overflow-x: auto;
+  padding: 1.45rem;
+  color: #dce8df;
+  background: transparent;
+  font-size: clamp(0.78rem, 1.1vw, 0.9rem);
+  line-height: 1.65;
+  tab-size: 4;
 }
 
-.fastql-architecture {
+.fastql-code-card__code code,
+.fastql-code-card__result code {
+  display: block;
+  color: inherit;
+  background: transparent;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: inherit;
+  text-align: left;
+  white-space: pre;
+}
+
+.fastql-code-card__result {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.4rem;
+  padding: 1rem 1.45rem 1.15rem;
+  border-top: 1px solid var(--fastql-code-line);
+  color: #bbf7d0;
+  background: #0c120e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
 }
 
-.fastql-architecture > div {
-  min-width: 0;
-  padding: 1rem;
-  border-top: 3px solid var(--fastql-green);
+.fastql-code-card__result span {
+  color: var(--fastql-code-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fastql-value-strip {
+  border-bottom: 1px solid var(--fastql-line);
   background: var(--fastql-surface);
 }
 
-.fastql-architecture strong,
-.fastql-architecture span {
-  display: block;
+.fastql-value-strip__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.fastql-architecture span {
-  margin-top: 0.35rem;
+.fastql-value-strip__grid > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.65rem;
+  padding: 1.35rem clamp(1rem, 2vw, 1.75rem);
+  border-left: 1px solid var(--fastql-line);
+}
+
+.fastql-value-strip__grid > div:last-child {
+  border-right: 1px solid var(--fastql-line);
+}
+
+.fastql-value-strip__metric {
+  color: var(--fastql-green-dark);
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.fastql-value-strip__grid > div > span:not(.fastql-value-strip__metric) {
   color: var(--fastql-muted);
   font-size: 0.88rem;
 }
 
+.fastql-section {
+  padding-block: clamp(4.5rem, 8vw, 7rem);
+  border-bottom: 1px solid var(--fastql-line);
+  background: var(--fastql-panel);
+}
+
+.fastql-section--tinted {
+  background: var(--fastql-surface);
+}
+
+.fastql-section--last {
+  border-bottom: 0;
+}
+
+.fastql-section__heading {
+  max-width: 760px;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.fastql-section__heading--compact {
+  max-width: 680px;
+}
+
+.fastql-section__heading h2,
+.fastql-inspect h2 {
+  margin: 0.65rem 0 0;
+  color: var(--fastql-ink);
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+}
+
+.fastql-section__heading p,
+.fastql-inspect__copy > p {
+  max-width: 680px;
+  margin: 1rem 0 0;
+  color: var(--fastql-muted);
+  font-size: 1.03rem;
+  line-height: 1.7;
+}
+
+.fastql-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.fastql-feature-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 300px;
+  flex-direction: column;
+  padding: clamp(1.35rem, 2.5vw, 1.85rem);
+  border: 1px solid var(--fastql-line);
+  border-radius: 10px;
+  background: var(--fastql-panel);
+  box-shadow: 0 1px 2px rgb(23 33 27 / 3%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.fastql-feature-card:hover {
+  border-color: rgb(21 128 61 / 42%);
+  box-shadow: 0 16px 36px rgb(23 33 27 / 8%);
+  transform: translateY(-2px);
+}
+
+.fastql-feature-card__index {
+  color: var(--fastql-green-dark);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.fastql-feature-card h3 {
+  margin: 2.2rem 0 0.7rem;
+  color: var(--fastql-ink);
+  font-size: 1.18rem;
+  letter-spacing: -0.015em;
+}
+
+.fastql-feature-card p {
+  margin: 0;
+  color: var(--fastql-muted);
+  line-height: 1.65;
+}
+
+.fastql-feature-card a {
+  align-self: flex-start;
+  margin-top: auto;
+  padding-top: 1.5rem;
+  color: var(--fastql-green-dark);
+  font-size: 0.9rem;
+  font-weight: 680;
+  text-decoration: none;
+}
+
+.fastql-workflow {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.fastql-workflow::before {
+  position: absolute;
+  top: 24px;
+  right: 10%;
+  left: 10%;
+  height: 1px;
+  background: var(--fastql-line);
+  content: "";
+}
+
+.fastql-workflow__step {
+  position: relative;
+  min-width: 0;
+  padding-top: 4rem;
+}
+
+.fastql-workflow__step > span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--fastql-green);
+  border-radius: 50%;
+  color: var(--fastql-green-dark);
+  background: var(--fastql-panel);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.fastql-workflow__title {
+  display: block;
+  color: var(--fastql-ink);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.fastql-workflow__step p {
+  max-width: 190px;
+  margin: 0.4rem 0 0;
+  color: var(--fastql-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.fastql-inspect {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(2.5rem, 6vw, 5rem);
+  align-items: center;
+}
+
+.fastql-inspect__copy {
+  min-width: 0;
+}
+
+.fastql-command {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1.6rem;
+  overflow-x: auto;
+  padding: 0.82rem 0.95rem;
+  border: 1px solid var(--fastql-code-line);
+  border-radius: 8px;
+  color: #dce8df;
+  background: var(--fastql-code);
+  white-space: nowrap;
+}
+
+.fastql-command span {
+  color: #4ade80;
+  font-weight: 750;
+}
+
+.fastql-command code {
+  color: inherit;
+  background: transparent;
+  font-size: 0.77rem;
+}
+
+.fastql-text-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  color: var(--fastql-green-dark);
+  font-size: 0.92rem;
+  font-weight: 680;
+  text-decoration: none;
+}
+
 .fastql-preview {
+  min-width: 0;
   overflow: hidden;
   border: 1px solid var(--fastql-line);
-  border-radius: 6px;
-  box-shadow: 0 18px 48px rgb(23 33 27 / 10%);
+  border-radius: 12px;
+  background: var(--fastql-panel);
+  box-shadow: 0 22px 54px rgb(23 33 27 / 12%);
 }
 
 .fastql-preview img {
@@ -139,26 +477,56 @@
   height: auto;
 }
 
-@media (max-width: 760px) {
-  .fastql-hero {
-    min-height: 620px;
-    padding-top: 3rem;
-  }
-
-  .fastql-hero h1 {
-    font-size: 3.5rem;
-  }
-
-  .fastql-grid,
-  .fastql-architecture {
-    grid-template-columns: 1fr;
-  }
+.fastql-route-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-html.dark .fastql-hero,
-html.dark .fastql-feature,
-html.dark .fastql-architecture > div {
-  background-color: #101713;
+.fastql-route-cards a {
+  display: flex;
+  min-width: 0;
+  min-height: 220px;
+  flex-direction: column;
+  padding: clamp(1.35rem, 2.5vw, 1.8rem);
+  border: 1px solid var(--fastql-line);
+  border-radius: 10px;
+  color: var(--fastql-ink);
+  background: var(--fastql-panel);
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.fastql-route-cards a:hover {
+  border-color: var(--fastql-green);
+  box-shadow: 0 14px 34px rgb(23 33 27 / 8%);
+  transform: translateY(-2px);
+}
+
+.fastql-route-cards span {
+  color: var(--fastql-green-dark);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fastql-route-cards__title {
+  max-width: 290px;
+  margin-top: 1.25rem;
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.fastql-route-cards .fastql-route-cards__cta {
+  margin-top: auto;
+  color: var(--fastql-muted);
+  font-size: 0.88rem;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 html.dark {
@@ -166,11 +534,169 @@ html.dark {
   --fastql-muted: #b6c2ba;
   --fastql-line: #334239;
   --fastql-green-dark: #4ade80;
-  --fastql-surface: #151f19;
+  --fastql-green-soft: #173222;
+  --fastql-surface: #111914;
+  --fastql-panel: #0d130f;
 }
 
-html.dark .fastql-hero h1,
-html.dark .fastql-feature h3,
+html.dark .fastql-hero {
+  background-image:
+    linear-gradient(rgb(51 66 57 / 45%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(51 66 57 / 45%) 1px, transparent 1px),
+    radial-gradient(circle at 78% 42%, rgb(34 197 94 / 9%), transparent 32rem);
+}
+
 html.dark .fastql-action {
-  color: #f4f7f5;
+  background: rgb(13 19 15 / 82%);
+}
+
+html.dark .fastql-action--primary {
+  background: var(--fastql-green);
+}
+
+html.dark .fastql-code-card,
+html.dark .fastql-preview {
+  box-shadow: 0 28px 70px rgb(0 0 0 / 34%);
+}
+
+@media (max-width: 960px) {
+  .fastql-hero {
+    min-height: auto;
+  }
+
+  .fastql-hero::before {
+    background: linear-gradient(180deg, var(--fastql-panel) 0%, transparent 60%);
+  }
+
+  .fastql-hero__layout,
+  .fastql-inspect {
+    grid-template-columns: 1fr;
+  }
+
+  .fastql-hero__layout {
+    gap: 3rem;
+  }
+
+  .fastql-hero__copy {
+    max-width: 760px;
+  }
+
+  .fastql-code-card {
+    width: min(100%, 720px);
+  }
+
+  .fastql-feature-grid,
+  .fastql-route-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fastql-feature-card:last-child,
+  .fastql-route-cards a:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .fastql-feature-card:last-child {
+    min-height: 250px;
+  }
+
+  .fastql-inspect__copy {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 700px) {
+  .fastql-hero {
+    padding-block: 3.75rem 4rem;
+  }
+
+  .fastql-hero h1 {
+    font-size: clamp(2.75rem, 14vw, 4rem);
+  }
+
+  .fastql-value-strip__grid,
+  .fastql-feature-grid,
+  .fastql-workflow,
+  .fastql-route-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .fastql-value-strip__grid > div,
+  .fastql-value-strip__grid > div:last-child {
+    border-right: 1px solid var(--fastql-line);
+    border-bottom: 1px solid var(--fastql-line);
+  }
+
+  .fastql-value-strip__grid > div:last-child {
+    border-bottom: 0;
+  }
+
+  .fastql-feature-card:last-child,
+  .fastql-route-cards a:last-child {
+    grid-column: auto;
+  }
+
+  .fastql-workflow {
+    gap: 0;
+  }
+
+  .fastql-workflow::before {
+    top: 24px;
+    bottom: 24px;
+    left: 24px;
+    width: 1px;
+    height: auto;
+  }
+
+  .fastql-workflow__step {
+    min-height: 110px;
+    padding: 0 0 2rem 4.25rem;
+  }
+
+  .fastql-workflow__step p {
+    max-width: none;
+  }
+
+  .fastql-feature-card,
+  .fastql-feature-card:last-child {
+    min-height: 260px;
+  }
+
+  .fastql-route-cards a {
+    min-height: 190px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fastql-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fastql-action {
+    width: 100%;
+  }
+
+  .fastql-code-card__code {
+    padding: 1.1rem;
+    font-size: 0.73rem;
+  }
+
+  .fastql-code-card__result {
+    padding-inline: 1.1rem;
+    overflow-x: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fastql-action,
+  .fastql-feature-card,
+  .fastql-route-cards a {
+    transition: none;
+  }
+
+  .fastql-action:hover,
+  .fastql-feature-card:hover,
+  .fastql-route-cards a:hover {
+    transform: none;
+  }
 }

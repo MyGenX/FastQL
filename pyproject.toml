@@ -56,7 +56,7 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/MyGenX/FastQL"
-Documentation = "https://github.com/MyGenX/FastQL/tree/main/docs"
+Documentation = "https://fastql.vachagan.dev"
 Repository = "https://github.com/MyGenX/FastQL"
 Issues = "https://github.com/MyGenX/FastQL/issues"
 
