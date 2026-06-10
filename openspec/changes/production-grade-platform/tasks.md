@@ -74,10 +74,10 @@
 
 ## 10. Phase 3 — Apollo Federation v2
 
-- [ ] 10.1 Add `fastql/federation/` with federation directives (`@key/@external/@shareable/@requires/@provides/@inaccessible/@override/@tag`) as applied-directive metadata.
-- [ ] 10.2 Add a federated-SDL printer with the `@link` import header.
-- [ ] 10.3 Add `_service { sdl }`, the `_Any`/`_Entity`/`_Service` types, and `_entities(representations)` with a per-type reference-resolver registry.
-- [ ] 10.4 `tests/test_federation.py` covering directive rendering, `_service`, ordered `_entities` resolution, reference resolvers.
+- [x] 10.1 Add `fastql/federation/` with federation directives (`@key/@external/@shareable/@requires/@provides/@inaccessible/@override/@tag`) as applied-directive metadata.
+- [x] 10.2 Add a federated-SDL printer with the `@link` import header.
+- [x] 10.3 Add `_service { sdl }`, the `_Any`/`_Entity`/`_Service` types, and `_entities(representations)` with a per-type reference-resolver registry.
+- [x] 10.4 `tests/test_federation.py` covering directive rendering, `_service`, ordered `_entities` resolution, reference resolvers.
 
 ## 11. Phase 3 — Subscription transport (integrations)
 

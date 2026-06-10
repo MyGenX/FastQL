@@ -76,7 +76,11 @@ def _render_field(name: str, field: Any) -> str:
     out = f"{name}{args}: {_render_type_ref(field.type)}"
     if field.deprecation_reason:
         out += f" @deprecated(reason: {json.dumps(field.deprecation_reason)})"
-    if getattr(field, "external", False):
+    has_external_directive = any(
+        directive.name == "external"
+        for directive in getattr(field, "directives", [])
+    )
+    if getattr(field, "external", False) and not has_external_directive:
         out += " @external"
     out += _render_directives(getattr(field, "directives", []))
     return out
