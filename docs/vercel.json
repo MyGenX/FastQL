@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "",
+      "destination": "https://fastql.mintlify.app"
+    },
+    {
+      "source": "/:match*",
+      "destination": "https://fastql.mintlify.app/:match*"
+    }
+  ]
+}
