@@ -56,6 +56,8 @@ from fastql.registry import TypeRegistry, default_registry
 from fastql.schema_builder import SchemaBuildError, build_schema
 from fastql.sdl import print_schema
 from fastql.testing import GraphQLTestClient
+from fastql.tracing import ApolloTracingExtension
+from fastql.uploads import Upload, UploadedFile
 from fastql.types import (
     AppliedDirective,
     Boolean,
@@ -93,6 +95,7 @@ __all__ = [
     "BasePermission",
     "FieldExtension",
     "SchemaExtension",
+    "ApolloTracingExtension",
     # Context / DI
     "Context",
     "Info",
@@ -109,6 +112,8 @@ __all__ = [
     "String",
     "Boolean",
     "ID",
+    "Upload",
+    "UploadedFile",
     "NonNull",
     "ListType",
     # Schema building and execution

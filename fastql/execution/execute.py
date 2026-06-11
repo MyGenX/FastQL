@@ -19,6 +19,8 @@ from fastql.context import Info, ResolveInfo, build_injection_plan
 from fastql.errors import GraphQLError, GraphQLSyntaxError
 from fastql.execution.collect_fields import collect_fields
 from fastql.extensions import (
+    ExtensionExecutionContext,
+    bind_execution_context,
     collect_results,
     has_resolve_override,
     instantiate_extensions,
@@ -80,12 +82,22 @@ async def execute(
     mask_message: str = _DEFAULT_MASK_MESSAGE,
 ) -> ExecutionResult:
     extensions = instantiate_extensions(getattr(schema, "extensions", None))
+    extension_context = ExtensionExecutionContext(
+        schema=schema,
+        query=query,
+        variable_values=variable_values,
+        context=context,
+        operation_name=operation_name,
+        root_value=root_value,
+    )
+    bind_execution_context(extensions, extension_context)
     async with phase(extensions, "on_operation"):
         result = await _run_pipeline(
             schema, query, variable_values, context,
             operation_name, root_value, extensions,
-            mask_errors, mask_message,
+            mask_errors, mask_message, extension_context,
         )
+        extension_context.result = result
     if extensions:
         extra = await collect_results(extensions)
         if extra:
@@ -96,6 +108,7 @@ async def execute(
 async def _run_pipeline(
     schema, query, variable_values, context, operation_name, root_value, extensions,
     mask_errors=False, mask_message=_DEFAULT_MASK_MESSAGE,
+    extension_context=None,
 ) -> ExecutionResult:
     async with phase(extensions, "on_parse"):
         if isinstance(query, (str, Source)):
@@ -109,6 +122,8 @@ async def _run_pipeline(
     operation, op_error = _get_operation(document, operation_name)
     if op_error is not None:
         return ExecutionResult(errors=[op_error], executed=False)
+    if extension_context is not None:
+        extension_context.operation = operation
 
     async with phase(extensions, "on_validate"):
         validation_errors = validate(schema, document)

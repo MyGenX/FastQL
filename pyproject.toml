@@ -40,6 +40,10 @@ flask = [
 django = [
     "django>=5.2,<6",
 ]
+opentelemetry = [
+    "opentelemetry-api>=1.20,<2",
+    "opentelemetry-sdk>=1.20,<2",
+]
 all = [
     "starlette>=0.50,<2",
     "fastapi>=0.129,<1",

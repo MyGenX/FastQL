@@ -26,9 +26,24 @@ from __future__ import annotations
 
 import inspect
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Iterable, Sequence
 
 NextResolver = Callable[..., Any]
+
+
+@dataclass
+class ExtensionExecutionContext:
+    """Per-execution state exposed to schema extensions."""
+
+    schema: Any
+    query: Any
+    variable_values: dict[str, Any] | None
+    context: Any
+    operation_name: str | None
+    root_value: Any
+    operation: Any = None
+    result: Any = None
 
 
 class SchemaExtension:
@@ -38,6 +53,8 @@ class SchemaExtension:
     may ``yield`` once to wrap the phase; otherwise they run before it. Both sync
     and ``async`` implementations are supported.
     """
+
+    execution_context: ExtensionExecutionContext | None = None
 
     def on_operation(self) -> Any:  # noqa: D401 - hook
         """Wrap the whole operation."""
@@ -75,6 +92,14 @@ def instantiate_extensions(
     if not extensions:
         return []
     return [ext() if isinstance(ext, type) else ext for ext in extensions]
+
+
+def bind_execution_context(
+    extensions: Sequence[SchemaExtension], context: ExtensionExecutionContext
+) -> None:
+    """Attach the active execution state to every extension instance."""
+    for extension in extensions:
+        extension.execution_context = context
 
 
 async def _enter(result: Any) -> tuple[str, Any] | None:
@@ -148,10 +173,12 @@ async def collect_results(extensions: Sequence[SchemaExtension]) -> dict[str, An
 
 
 __all__ = [
+    "ExtensionExecutionContext",
     "SchemaExtension",
     "PHASES",
     "instantiate_extensions",
     "phase",
     "has_resolve_override",
     "collect_results",
+    "bind_execution_context",
 ]

@@ -81,24 +81,24 @@
 
 ## 11. Phase 3 — Subscription transport (integrations)
 
-- [ ] 11.1 Add a `graphql-transport-ws` WebSocket handler in `fastql/integrations/` driving `subscribe()`.
-- [ ] 11.2 Add an SSE (`text/event-stream`) transport for subscriptions/incremental results.
-- [ ] 11.3 Add `multipart/mixed` streaming for streaming-capable adapters; wire transports into ASGI/Starlette/FastAPI adapters.
-- [ ] 11.4 `tests/test_subscription_transport.py` covering connection_ack→next→complete, error message, client complete, SSE streaming.
+- [x] 11.1 Add a `graphql-transport-ws` WebSocket handler in `fastql/integrations/` driving `subscribe()`.
+- [x] 11.2 Add an SSE (`text/event-stream`) transport for subscriptions/incremental results.
+- [x] 11.3 Add `multipart/mixed` streaming for streaming-capable adapters; wire transports into ASGI/Starlette/FastAPI adapters.
+- [x] 11.4 `tests/test_subscription_transport.py` covering connection_ack→next→complete, error message, client complete, SSE streaming.
 
 ## 12. Phase 3 — File uploads & query batching (HTTP)
 
-- [ ] 12.1 Add an `Upload` scalar usable as an input type.
-- [ ] 12.2 Parse `multipart/form-data` per graphql-multipart-request-spec (operations/map/files) in the shared HTTP handler; reject malformed maps.
-- [ ] 12.3 Accept JSON-array batch bodies (configurable, bounded); return aligned result arrays with isolated per-op errors.
-- [ ] 12.4 `tests/test_uploads.py` and `tests/test_query_batching.py` (single/multiple files, malformed map, array response, disabled/oversized rejection).
+- [x] 12.1 Add an `Upload` scalar usable as an input type.
+- [x] 12.2 Parse `multipart/form-data` per graphql-multipart-request-spec (operations/map/files) in the shared HTTP handler; reject malformed maps.
+- [x] 12.3 Accept JSON-array batch bodies (configurable, bounded); return aligned result arrays with isolated per-op errors.
+- [x] 12.4 `tests/test_uploads.py` and `tests/test_query_batching.py` (single/multiple files, malformed map, array response, disabled/oversized rejection).
 
 ## 13. Phase 3 — Tracing / instrumentation
 
-- [ ] 13.1 Add an Apollo-style tracing extension merging timing into `ExecutionResult.extensions`.
-- [ ] 13.2 Add an OpenTelemetry extension (behind `[opentelemetry]` extra, lazy import) emitting operation/field spans.
-- [ ] 13.3 Add the `opentelemetry` extra to `pyproject.toml`; import-guard test that core works without it.
-- [ ] 13.4 `tests/test_tracing.py` covering tracing block presence and OTel no-op without the dependency.
+- [x] 13.1 Add an Apollo-style tracing extension merging timing into `ExecutionResult.extensions`.
+- [x] 13.2 Add an OpenTelemetry extension (behind `[opentelemetry]` extra, lazy import) emitting operation/field spans.
+- [x] 13.3 Add the `opentelemetry` extra to `pyproject.toml`; import-guard test that core works without it.
+- [x] 13.4 `tests/test_tracing.py` covering tracing block presence and OTel no-op without the dependency.
 
 ## 14. Phase 4 — Pydantic integration
 
