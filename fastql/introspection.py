@@ -298,8 +298,10 @@ def _build_types() -> None:
 
 
 def _input_default_value(parent):
+    from fastql.sdl import render_value
+
     value = getattr(parent.value, "default_value", None)
-    return None if value is None else str(value)
+    return None if value is None else render_value(value)
 
 
 _build_types()
