@@ -10,6 +10,7 @@ import pytest
 from fastql.registry import TypeRegistry
 from fastql.schema_builder import build_schema
 from fastql.types import Field, NonNull, ObjectType, String
+from fastql.integrations.websocket import GRAPHQL_TRANSPORT_WS_PROTOCOL
 
 
 async def test_sync_bridge_does_not_nest_a_running_event_loop():
@@ -32,6 +33,24 @@ def make_schema():
         },
     )
     return build_schema(query=query, registry=TypeRegistry())
+
+
+def make_subscription_schema():
+    async def events():
+        yield "ready"
+
+    query = ObjectType(
+        "Query", fields={"ping": Field(NonNull(String), resolver=lambda: "pong")}
+    )
+    subscription = ObjectType(
+        "Subscription",
+        fields={"events": Field(NonNull(String), resolver=events)},
+    )
+    return build_schema(
+        query=query,
+        subscription=subscription,
+        registry=TypeRegistry(),
+    )
 
 
 def test_starlette_router_mount_middleware_context_and_schema_route():
@@ -95,6 +114,74 @@ def test_fastapi_router_dependencies_prefix_and_openapi_controls():
         openapi = client.get("/openapi.json").json()
     assert response.json()["data"]["framework"] == "fastapi"
     assert "/api/graphql" not in openapi["paths"]
+
+
+def test_starlette_router_exposes_graphql_transport_websocket():
+    pytest.importorskip("starlette")
+    pytest.importorskip("httpx")
+    from starlette.applications import Starlette
+    from starlette.routing import Mount
+    from starlette.testclient import TestClient
+
+    from fastql.integrations.starlette import create_starlette_router
+
+    app = Starlette(
+        routes=[Mount("/api", app=create_starlette_router(make_subscription_schema()))]
+    )
+    with TestClient(app) as client:
+        with client.websocket_connect(
+            "/api/graphql", subprotocols=[GRAPHQL_TRANSPORT_WS_PROTOCOL]
+        ) as websocket:
+            websocket.send_json({"type": "connection_init"})
+            assert websocket.receive_json() == {"type": "connection_ack"}
+            websocket.send_json(
+                {
+                    "id": "events",
+                    "type": "subscribe",
+                    "payload": {"query": "subscription { events }"},
+                }
+            )
+            assert websocket.receive_json()["payload"] == {
+                "data": {"events": "ready"}
+            }
+            assert websocket.receive_json() == {
+                "id": "events",
+                "type": "complete",
+            }
+
+
+def test_fastapi_router_exposes_graphql_transport_websocket():
+    pytest.importorskip("fastapi")
+    pytest.importorskip("httpx")
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from fastql.integrations.fastapi import create_fastapi_router
+
+    app = FastAPI()
+    app.include_router(
+        create_fastapi_router(make_subscription_schema()), prefix="/api"
+    )
+    with TestClient(app) as client:
+        with client.websocket_connect(
+            "/api/graphql", subprotocols=[GRAPHQL_TRANSPORT_WS_PROTOCOL]
+        ) as websocket:
+            websocket.send_json({"type": "connection_init"})
+            assert websocket.receive_json() == {"type": "connection_ack"}
+            websocket.send_json(
+                {
+                    "id": "events",
+                    "type": "subscribe",
+                    "payload": {"query": "subscription { events }"},
+                }
+            )
+            assert websocket.receive_json()["payload"] == {
+                "data": {"events": "ready"}
+            }
+            assert websocket.receive_json() == {
+                "id": "events",
+                "type": "complete",
+            }
 
 
 def test_flask_blueprint_prefix_hooks_headers_and_async_execution():

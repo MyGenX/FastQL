@@ -41,6 +41,14 @@ def test_every_adapter_has_an_independent_extra_and_all_is_the_union():
     assert set(extras["all"]) == expected
 
 
+def test_opentelemetry_has_an_isolated_optional_extra():
+    dependencies = " ".join(
+        PYPROJECT["project"]["optional-dependencies"]["opentelemetry"]
+    ).lower()
+    assert "opentelemetry-api" in dependencies
+    assert "opentelemetry-sdk" in dependencies
+
+
 def test_core_and_framework_neutral_integrations_do_not_import_frameworks():
     code = """
 import sys
@@ -112,7 +120,15 @@ def test_built_wheel_contains_adapters_and_optional_metadata(tmp_path):
         assert f"{package_dir}/__init__.py" in names
     assert "fastql/integrations/http.py" in names
     assert "fastql/integrations/django.py" in names
-    for extra in ("asgi", "starlette", "fastapi", "flask", "django", "all"):
+    for extra in (
+        "asgi",
+        "starlette",
+        "fastapi",
+        "flask",
+        "django",
+        "opentelemetry",
+        "all",
+    ):
         assert f"Provides-Extra: {extra}" in metadata
 
 

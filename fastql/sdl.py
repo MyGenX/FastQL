@@ -76,7 +76,11 @@ def _render_field(name: str, field: Any) -> str:
     out = f"{name}{args}: {_render_type_ref(field.type)}"
     if field.deprecation_reason:
         out += f" @deprecated(reason: {json.dumps(field.deprecation_reason)})"
-    if getattr(field, "external", False):
+    has_external_directive = any(
+        directive.name == "external"
+        for directive in getattr(field, "directives", [])
+    )
+    if getattr(field, "external", False) and not has_external_directive:
         out += " @external"
     out += _render_directives(getattr(field, "directives", []))
     return out
@@ -122,7 +126,13 @@ def _render_type_ref(type_ref: Any) -> str:
     return getattr(type_ref, "name", str(type_ref))
 
 
-def _render_value(value: Any) -> str:
+def render_value(value: Any) -> str:
+    """Render a Python value as a GraphQL value literal (e.g. for default values).
+
+    Strings are quoted, booleans become ``true``/``false``, enums use their
+    member name, and lists are rendered recursively. Also used by introspection
+    to serialize ``__InputValue.defaultValue``.
+    """
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -134,8 +144,12 @@ def _render_value(value: Any) -> str:
     if isinstance(value, str):
         return json.dumps(value)
     if isinstance(value, (list, tuple)):
-        return "[" + ", ".join(_render_value(v) for v in value) + "]"
+        return "[" + ", ".join(render_value(v) for v in value) + "]"
     return json.dumps(str(value))
+
+
+# Internal alias kept for existing call sites within this module.
+_render_value = render_value
 
 
 def _render_directives(directives: list[Any]) -> str:

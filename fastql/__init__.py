@@ -56,6 +56,8 @@ from fastql.registry import TypeRegistry, default_registry
 from fastql.schema_builder import SchemaBuildError, build_schema
 from fastql.sdl import print_schema
 from fastql.testing import GraphQLTestClient
+from fastql.tracing import ApolloTracingExtension
+from fastql.uploads import Upload, UploadedFile
 from fastql.types import (
     AppliedDirective,
     Boolean,
@@ -70,7 +72,12 @@ from fastql.types import (
 )
 from fastql.validation import validate
 
-__version__ = "0.0.1"
+try:
+    from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+    __version__ = _pkg_version("mygenx-fastql")
+except PackageNotFoundError:  # not installed (e.g. running from a source tree)
+    __version__ = "1.0.0"
 
 __all__ = [
     "__version__",
@@ -93,6 +100,7 @@ __all__ = [
     "BasePermission",
     "FieldExtension",
     "SchemaExtension",
+    "ApolloTracingExtension",
     # Context / DI
     "Context",
     "Info",
@@ -109,6 +117,8 @@ __all__ = [
     "String",
     "Boolean",
     "ID",
+    "Upload",
+    "UploadedFile",
     "NonNull",
     "ListType",
     # Schema building and execution

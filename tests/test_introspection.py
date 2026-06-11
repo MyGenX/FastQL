@@ -5,7 +5,16 @@ import pytest
 from fastql.decorators import default_registry
 from fastql.execution import execute
 from fastql.schema_builder import build_schema
-from fastql.types import Argument, Field, ID, NonNull, ObjectType, String
+from fastql.types import (
+    Argument,
+    Boolean,
+    Field,
+    ID,
+    Int,
+    NonNull,
+    ObjectType,
+    String,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -92,3 +101,51 @@ async def test_typename_on_a_selection():
 async def test_typename_on_query_root():
     result = await execute(make_schema(), "{ __typename }")
     assert result.data == {"__typename": "Query"}
+
+
+async def test_deprecated_default_value_is_graphql_literal():
+    # Regression: defaultValue must be a GraphQL value literal, not the raw
+    # Python string. The @deprecated reason default "No longer supported" was
+    # emitted unquoted, which broke GraphiQL's introspection parsing with
+    # `Syntax Error: Expected <EOF>, found Name "longer"`.
+    result = await execute(
+        make_schema(),
+        "{ __schema { directives { name args { name defaultValue } } } }",
+    )
+    assert result.errors == []
+    directives = {d["name"]: d for d in result.data["__schema"]["directives"]}
+    reason_arg = next(
+        a for a in directives["deprecated"]["args"] if a["name"] == "reason"
+    )
+    assert reason_arg["defaultValue"] == '"No longer supported"'
+
+
+async def test_argument_default_values_are_graphql_literals():
+    query = ObjectType(
+        "Query",
+        fields={
+            "search": Field(
+                String,
+                args={
+                    "term": Argument(String, default_value="hi"),
+                    "limit": Argument(Int, default_value=10),
+                    "exact": Argument(Boolean, default_value=False),
+                },
+                resolver=lambda **kwargs: "ok",
+            )
+        },
+    )
+    schema = build_schema(query=query)
+    result = await execute(
+        schema,
+        '{ __type(name: "Query") { fields { args { name defaultValue } } } }',
+    )
+    assert result.errors == []
+    args = {
+        a["name"]: a["defaultValue"]
+        for f in result.data["__type"]["fields"]
+        for a in f["args"]
+    }
+    assert args["term"] == '"hi"'
+    assert args["limit"] == "10"
+    assert args["exact"] == "false"
