@@ -72,7 +72,12 @@ from fastql.types import (
 )
 from fastql.validation import validate
 
-__version__ = "0.0.1"
+try:
+    from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+    __version__ = _pkg_version("mygenx-fastql")
+except PackageNotFoundError:  # not installed (e.g. running from a source tree)
+    __version__ = "1.0.0"
 
 __all__ = [
     "__version__",
