@@ -44,6 +44,9 @@ opentelemetry = [
     "opentelemetry-api>=1.20,<2",
     "opentelemetry-sdk>=1.20,<2",
 ]
+pydantic = [
+    "pydantic>=2,<3",
+]
 all = [
     "starlette>=0.50,<2",
     "fastapi>=0.129,<1",

@@ -102,9 +102,9 @@
 
 ## 14. Phase 4 — Pydantic integration
 
-- [ ] 14.1 Add `[pydantic]` extra and a lazy-imported integration deriving output/input types from Pydantic models.
-- [ ] 14.2 Construct + validate Pydantic models from coerced inputs; surface validation failures as GraphQL errors.
-- [ ] 14.3 `tests/test_pydantic.py` covering type/input generation, validation error surfacing, and core-without-pydantic import guard.
+- [x] 14.1 Add `[pydantic]` extra and a lazy-imported integration deriving output/input types from Pydantic models.
+- [x] 14.2 Construct + validate Pydantic models from coerced inputs; surface validation failures as GraphQL errors.
+- [x] 14.3 `tests/test_pydantic.py` covering type/input generation, validation error surfacing, and core-without-pydantic import guard.
 
 ## 15. Phase 4 — Incremental delivery (@defer/@stream)
 

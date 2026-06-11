@@ -109,8 +109,25 @@ def _coerce_input_object(value: dict, input_type: InputObjectType, where: str) -
                 f"Missing required input field {field_name!r} for {where}."
             )
     if input_type.python_type is not None:
-        return input_type.python_type(**result)
+        return _construct_input(input_type, result, where)
     return result
+
+
+def _construct_input(input_type: InputObjectType, result: dict, where: str) -> Any:
+    """Build ``input_type.python_type`` from coerced fields.
+
+    A constructor may run validation (e.g. a Pydantic-backed input). Convert any
+    non-``GraphQLError`` it raises into a ``GraphQLError`` so the failure is
+    reported in the response instead of crashing execution.
+    """
+    try:
+        return input_type.python_type(**result)
+    except GraphQLError:
+        raise
+    except Exception as error:
+        raise GraphQLError(
+            f"Invalid value for {where}: {error}", original_error=error
+        ) from error
 
 
 # --- AST literal coercion ----------------------------------------------------
@@ -191,7 +208,7 @@ def _input_object_from_ast(node, input_type, variable_values) -> dict:
         elif isinstance(input_field.type, NonNull):
             raise GraphQLError(f"Missing required input field {field_name!r}.")
     if input_type.python_type is not None:
-        return input_type.python_type(**result)
+        return _construct_input(input_type, result, input_type.name)
     return result
 
 
