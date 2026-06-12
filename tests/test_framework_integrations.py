@@ -381,6 +381,9 @@ async def test_quart_blueprint_get_post_and_graphiql():
 @pytest.mark.asyncio
 async def test_channels_consumer_drives_graphql_transport_ws():
     pytest.importorskip("channels")
+    # channels.testing eagerly imports daphne (via ChannelsLiveServerTestCase),
+    # which is a separate optional dependency the adapter itself does not need.
+    pytest.importorskip("daphne")
     _configure_django()
     from channels.testing import WebsocketCommunicator
 
