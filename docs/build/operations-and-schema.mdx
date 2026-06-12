@@ -37,7 +37,9 @@ schema = Schema(
 provides the equivalent functional API and accepts additional named types, a registry,
 and `SchemaConfig`.
 
-<Warning>
-Subscription root metadata is supported, but FastQL does not yet implement a
-streaming subscription transport or event execution lifecycle.
-</Warning>
+<Note>
+Subscription execution and the streaming subscription transports
+(`graphql-transport-ws`, SSE, and `multipart/mixed`) are implemented — see
+[Subscriptions](/advanced/subscriptions). The bundled development server does not
+host them; run subscriptions through a production [framework adapter](/integrations/overview).
+</Note>

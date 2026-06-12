@@ -10,12 +10,15 @@ FastQL re-exports its primary public surface from `fastql`.
 | Definitions | `Type`, `Input`, `Interface`, `Enum`, `Union`, `Scalar` |
 | Operations | `Query`, `Mutation`, `Subscription` |
 | Fields | `Field`, `Arg`, `Argument`, `AppliedDirective` |
-| Policy | `BasePermission`, `FieldExtension` |
+| Directives & enums | `Directive`, `enum_value` |
+| Policy | `BasePermission`, `FieldExtension`, `SchemaExtension` |
 | Context | `Context`, `Info`, `ResolveInfo`, `register_dependency`, `provides` |
 | Schema | `Schema`, `SchemaConfig`, `build_schema`, `TypeRegistry`, `default_registry` |
-| Execution | `execute`, `ExecutionResult`, `validate`, `parse` |
+| Execution | `execute`, `subscribe`, `execute_incremental`, `ExecutionResult`, `validate`, `parse` |
+| Loaders | `DataLoader` |
 | Output | `print_schema` and introspection support |
-| Types | `Int`, `Float`, `String`, `Boolean`, `ID`, `NonNull`, `ListType` |
+| Types | `Int`, `Float`, `String`, `Boolean`, `ID`, `NonNull`, `ListType`, `Upload`, `UploadedFile` |
+| Testing | `GraphQLTestClient` |
 | Development | `serve`, `start_server` |
 
 Prefer importing these names from `fastql`; internal modules may change without

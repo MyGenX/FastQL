@@ -36,6 +36,38 @@ The query may be a string, `Source`, or parsed `DocumentNode`. Execution parses 
 needed, selects an operation, validates, coerces variables, resolves fields, completes
 values, and returns `ExecutionResult`.
 
+Pass `mask_errors=True` (with an optional `mask_message`) to replace unexpected
+resolver errors with a generic message in the response; explicit `GraphQLError`s pass
+through and the original exception stays on `GraphQLError.original_error`.
+
+## `subscribe`
+
+```python
+stream = await subscribe(schema, "subscription { counter(to: 2) }", context=ctx)
+async for result in stream:
+    ...
+```
+
+Runs a subscription and returns an async iterator yielding one `ExecutionResult` per
+source event, or a single `ExecutionResult` (with `executed=False`) when the document
+is invalid or is not a subscription. See [Subscriptions](/advanced/subscriptions).
+
+## `execute_incremental`
+
+```python
+async for payload in execute_incremental(schema, query):
+    ...
+```
+
+Executes an operation as an incremental-delivery stream of JSON payloads for
+`@defer` / `@stream`. See [Incremental delivery](/advanced/incremental-delivery).
+
+## Schema extensions
+
+`Schema(query=..., extensions=[...])` (and `build_schema(..., extensions=[...])`)
+attach [schema extensions](/advanced/schema-extensions) that observe the operation
+lifecycle and wrap field resolution.
+
 ## `validate` and `parse`
 
 Use `parse(source)` when an application benefits from retaining the GraphQL AST.

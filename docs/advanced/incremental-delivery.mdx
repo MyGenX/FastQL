@@ -1,0 +1,42 @@
+---
+title: Incremental delivery
+description: Deliver slow fields and long lists progressively with @defer and @stream.
+---
+
+`@defer` and `@stream` let a client receive an initial response immediately and the
+remaining data in later incremental payloads, over a streaming transport.
+
+```graphql
+{
+  user {
+    id
+    ... on User @defer { bio }      # delivered in a later payload
+  }
+  feed @stream(initialCount: 1) {   # first item now, the rest stream in
+    title
+  }
+}
+```
+
+`execute_incremental()` returns an async iterator of JSON-shaped payloads: the
+initial `{ "data": ..., "hasNext": true }`, followed by
+`{ "incremental": [{ "data"|"items": ..., "path": [...] }], "hasNext": ... }`, ending
+with `hasNext: false`.
+
+```python
+from fastql import execute_incremental
+
+async for payload in execute_incremental(schema, query):
+    send(payload)
+```
+
+- `@defer` applies to fragment spreads and inline fragments; `@defer(if: false)`
+  resolves the fragment inline with no extra payload.
+- `@stream(initialCount: n)` applies to list fields and is validated to reject
+  non-list fields.
+
+<Note>
+Incremental delivery requires a streaming transport. Over a non-streaming transport,
+call `execute()` instead — it ignores the directives and returns one complete result.
+The HTTP handler makes this choice automatically based on the `Accept` header.
+</Note>

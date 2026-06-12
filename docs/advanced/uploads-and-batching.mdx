@@ -1,0 +1,39 @@
+---
+title: File uploads & batching
+description: Multipart file uploads and JSON-array query batching over HTTP.
+---
+
+## File uploads
+
+The `Upload` scalar is usable as an input type. The shared HTTP handler parses
+`multipart/form-data` per the graphql-multipart-request-spec (`operations`, `map`, and
+file parts) and injects each file as an `UploadedFile` into the resolver.
+
+```python
+from fastql import Field, Mutation, Upload, UploadedFile
+
+
+@Mutation
+class Mutations:
+    @Field
+    def upload(self, file: Upload) -> str:
+        data: UploadedFile = file
+        return f"{data.filename} ({data.content_type})"
+```
+
+`UploadedFile` exposes `filename`, `content_type`, and a readable `stream`;
+`UploadedFile.from_bytes(...)` is handy in tests. Malformed multipart maps are
+rejected with a request error.
+
+## Query batching
+
+The handler accepts a JSON **array** of operations in one request and returns an
+aligned array of results, with per-operation errors isolated. Batching is bounded and
+configurable on the endpoint, and disabled or oversized batches are rejected.
+
+```json
+[
+  { "query": "{ ping }" },
+  { "query": "{ user(id: 1) { name } }" }
+]
+```

@@ -14,6 +14,11 @@ the shared FastQL GraphQL-over-HTTP contract.
 | FastAPI | `pip install mygenx-fastql[fastapi]` | `create_fastapi_router` |
 | Flask | `pip install mygenx-fastql[flask]` | `create_flask_blueprint` |
 | Django | `pip install mygenx-fastql[django]` | `create_django_urlpatterns` |
+| AIOHTTP | `pip install mygenx-fastql[aiohttp]` | `create_aiohttp_app` |
+| Sanic | `pip install mygenx-fastql[sanic]` | `create_sanic_blueprint` |
+| Litestar | `pip install mygenx-fastql[litestar]` | `create_litestar_router` |
+| Quart | `pip install mygenx-fastql[quart]` | `create_quart_blueprint` |
+| Django Channels | `pip install mygenx-fastql[channels]` | `create_channels_application` |
 
 Use `pip install mygenx-fastql[all]` only for development or applications that truly
 host every adapter. An individual extra does not install unrelated frameworks.
@@ -33,6 +38,7 @@ a conflicting Starlette version.
 <CardGroup cols={2}>
   <Card title="ASGI, Starlette, and FastAPI" href="/integrations/asgi-and-api-frameworks" icon="server" />
   <Card title="Flask and Django" href="/integrations/flask-and-django" icon="window" />
+  <Card title="AIOHTTP, Sanic, Litestar, Quart & Channels" href="/integrations/additional-frameworks" icon="layer-group" />
   <Card title="HTTP context" href="/integrations/context" icon="brackets-curly" />
   <Card title="Protocol contract" href="/integrations/http-contract" icon="code" />
 </CardGroup>

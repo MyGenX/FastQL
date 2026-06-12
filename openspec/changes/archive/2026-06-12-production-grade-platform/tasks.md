@@ -108,19 +108,19 @@
 
 ## 15. Phase 4 — Incremental delivery (@defer/@stream)
 
-- [ ] 15.1 Parse/validate `@defer` (fragments) and `@stream` (list fields, `initialCount`).
-- [ ] 15.2 Produce initial + incremental payloads in the executor; collapse to a single result over non-streaming transports.
-- [ ] 15.3 Wire incremental payloads over the multipart/SSE transports from Phase 3.
-- [ ] 15.4 `tests/test_incremental_delivery.py` covering deferred fragment, `@defer(if:false)` inline, streamed list, non-streaming collapse.
+- [x] 15.1 Parse/validate `@defer` (fragments) and `@stream` (list fields, `initialCount`).
+- [x] 15.2 Produce initial + incremental payloads in the executor; collapse to a single result over non-streaming transports.
+- [x] 15.3 Wire incremental payloads over the multipart/SSE transports from Phase 3.
+- [x] 15.4 `tests/test_incremental_delivery.py` covering deferred fragment, `@defer(if:false)` inline, streamed list, non-streaming collapse.
 
 ## 16. Phase 4 — Additional framework adapters
 
-- [ ] 16.1 Add AIOHTTP, Sanic, Litestar, Quart, and Django Channels adapters delegating to the shared HTTP/subscription handlers.
-- [ ] 16.2 Add corresponding extras to `pyproject.toml` with isolated imports.
-- [ ] 16.3 `tests/test_framework_integrations.py` additions per new adapter (GET/POST, JSON shape, GraphiQL).
+- [x] 16.1 Add AIOHTTP, Sanic, Litestar, Quart, and Django Channels adapters delegating to the shared HTTP/subscription handlers.
+- [x] 16.2 Add corresponding extras to `pyproject.toml` with isolated imports.
+- [x] 16.3 `tests/test_framework_integrations.py` additions per new adapter (GET/POST, JSON shape, GraphiQL).
 
 ## 17. Docs & finalization
 
-- [ ] 17.1 Add docs pages under `docs/` for each new capability and update the capability catalog.
-- [ ] 17.2 Update `README.md` feature list and `CHANGELOG.md`.
-- [ ] 17.3 Run full `pytest`; ensure base install stays dependency-free (import-guard tests green).
+- [x] 17.1 Add docs pages under `docs/` for each new capability and update the capability catalog.
+- [x] 17.2 Update `README.md` feature list and `CHANGELOG.md`.
+- [x] 17.3 Run full `pytest`; ensure base install stays dependency-free (import-guard tests green).

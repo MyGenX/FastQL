@@ -1,0 +1,45 @@
+---
+title: Relay pagination
+description: Node interface, global IDs, and cursor connections.
+---
+
+`fastql.relay` provides the Relay server conventions: a `Node` interface with global
+object identification, and generic `Connection`/`Edge`/`PageInfo` types with a
+cursor-slicing helper.
+
+```python
+from fastql import Field, ID, Info, Query, Schema, Type
+from fastql.relay import (
+    Connection, Node, connection_from_list, register_node, resolve_node,
+    to_global_id,
+)
+
+
+@Type(interfaces=[Node])
+class User:
+    inner_id: int
+
+    @Field
+    def id(self) -> ID:
+        return to_global_id("User", self.inner_id)
+
+
+register_node("User", lambda inner_id, info=None: USERS.get(int(inner_id)))
+
+
+@Query
+class Queries:
+    @Field
+    def node(self, id: ID, info: Info) -> "Node | None":
+        return resolve_node(id, info)
+
+    @Field
+    def users(self, first: int | None = None, after: str | None = None) -> Connection[User]:
+        return connection_from_list(list(USERS.values()), first=first, after=after)
+```
+
+- `to_global_id` / `from_global_id` encode and decode opaque `Type:id` cursors.
+- `register_node(type_name, fetch)` maps a type to its id-based resolver, which
+  `resolve_node` uses to power the root `node(id)` field.
+- `connection_from_list` slices an in-memory list with `first/after` and
+  `last/before`, returning a `Connection` with `edges`, `pageInfo`, and cursors.

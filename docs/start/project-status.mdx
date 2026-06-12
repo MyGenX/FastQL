@@ -9,22 +9,42 @@ and local development server.
 
 ## Implemented
 
+Core engine and authoring:
+
 - Object, input, interface, enum, union, and custom scalar definitions
-- Query, mutation, and subscription root metadata
+- Query, mutation, and subscription roots with full execution
 - Python annotation and explicit `Field` declaration styles
 - Arguments, defaults, descriptions, deprecations, and directives
 - Parsing, validation, variable coercion, field collection, and async execution
 - Context injection, dependency providers, field extensions, and permissions
 - Introspection, SDL output, CLI serving, and a browser playground
+- [Generic types](/advanced/generic-types) and configurable error masking
+
+Data, performance, and observability:
+
+- [DataLoader](/advanced/dataloader) batching and caching
+- [Schema extensions](/advanced/schema-extensions) (lifecycle hooks + resolver wrapping)
+- [Apollo tracing and OpenTelemetry](/advanced/observability) instrumentation
+
+Protocol and ecosystem:
+
+- [Streaming subscriptions](/advanced/subscriptions) over `graphql-transport-ws`,
+  SSE, and `multipart/mixed`
+- [Incremental delivery](/advanced/incremental-delivery) with `@defer` / `@stream`
+- [Relay pagination](/advanced/relay-pagination) and [Apollo Federation v2](/advanced/federation)
+- [Custom directives, field visibility, and enum customization](/advanced/directives-and-visibility)
+- [File uploads and query batching](/advanced/uploads-and-batching)
+- [Pydantic integration](/advanced/pydantic) and a [test client + schema-export CLI](/advanced/testing-and-export)
+- ASGI, Starlette, FastAPI, Flask, Django, plus
+  [AIOHTTP, Sanic, Litestar, Quart, and Django Channels](/integrations/additional-frameworks) adapters
 
 ## Current boundaries
 
-- The bundled HTTP server is for local development only. It does not provide TLS,
-  authentication, connection reuse, or production hardening.
-- Subscription fields can be represented in the schema, but a streaming subscription
-  transport and event execution lifecycle are not implemented.
-- Federation, schema stitching, persisted operations, and production observability
-  integrations are outside the current capability set.
+- The bundled development HTTP server is for local use only. It does not provide
+  TLS, authentication, connection reuse, production hardening, or a streaming
+  subscription transport — run subscriptions and federation through a production
+  [framework adapter](/integrations/overview) instead.
+- Schema stitching and persisted operations are outside the current capability set.
 - Compatibility should be evaluated against the repository's tests and
   [canonical specifications](/specifications/capability-catalog), not inferred from
   another framework's API.

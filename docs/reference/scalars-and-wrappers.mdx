@@ -28,3 +28,7 @@ optional_items: list[Item] | None
 Use custom scalars for domain values that require explicit parsing and serialization.
 Scalar implementations must return GraphQL-compatible serialized output and raise
 clear errors for invalid input.
+
+The built-in `Upload` scalar is usable as an input type for `multipart/form-data`
+file uploads, injecting an `UploadedFile` into the resolver — see
+[File uploads & batching](/advanced/uploads-and-batching).
