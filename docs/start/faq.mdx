@@ -1,0 +1,73 @@
+---
+title: FAQ
+description: Common questions about FastQL — how it compares to Strawberry, its design choices, and production readiness.
+---
+
+## How does FastQL compare to Strawberry?
+
+FastQL and Strawberry are both code-first Python GraphQL frameworks, but they
+differ in their architecture and design goals:
+
+| | FastQL | Strawberry |
+| --- | --- | --- |
+| **Execution engine** | Own async-first engine (no `graphql-core` dependency) | Wraps `graphql-core` |
+| **Runtime dependencies** | Zero | `graphql-core` + optional extras |
+| **Schema model** | Single decorator API for all definitions | Class-based with `strawberry.type` etc. |
+| **Async** | Async-first; sync resolvers run in a thread pool | Mixed sync/async |
+| **Federation** | `fastql.federation` (built in) | Separate `strawberry-django` / federation package |
+| **Transports** | Framework-agnostic adapters | Integrated Django/ASGI views |
+
+FastQL's zero-dependency core means you can embed it in environments where adding
+`graphql-core` is undesirable, and its single schema model avoids the split between
+a code-first definition layer and a separate execution runtime.
+
+## Does FastQL really have zero runtime dependencies?
+
+Yes. The `mygenx-fastql` package installs with no required third-party runtime
+dependencies. All optional integrations (Pydantic, OpenTelemetry, federation) are
+behind package extras (`[pydantic]`, `[opentelemetry]`) and are never imported by
+the core.
+
+```bash
+pip install mygenx-fastql          # zero extra deps
+pip install mygenx-fastql[pydantic]  # adds pydantic
+```
+
+## Is FastQL async-first? Can I use sync resolvers?
+
+FastQL's execution pipeline is async-first — `execute`, `subscribe`, and
+`execute_incremental` are all async. Sync resolvers are fully supported: the engine
+detects non-coroutines and calls them directly without wrapping in
+`asyncio.run_in_executor`, so plain `def` resolvers add no threading overhead.
+
+## Where does the HTTP transport live?
+
+FastQL's core (`fastql`) has no transport code at all. HTTP, WebSocket, and SSE
+are implemented in the framework adapters (`fastql.asgi`, `fastql.starlette`,
+`fastql.fastapi`, etc.). This boundary means:
+
+- The same schema works with any supported web framework.
+- The development server (`python -m fastql serve`) is a thin ASGI wrapper and is
+  not suitable for production.
+- Framework-specific concerns (auth middleware, CORS, TLS) belong in the framework
+  layer, not in FastQL itself.
+
+See [Deployment](/operations/deployment) for production setup guidance.
+
+## How mature is FastQL?
+
+FastQL is early-stage. The core engine — schema building, validation, async
+execution, introspection, SDL output, subscriptions, incremental delivery, and
+federation — is implemented and tested against [canonical specifications](/specifications/capability-catalog).
+
+Features that are planned but not yet implemented are listed in the
+[project status](/start/project-status) page.
+
+Compatibility should be evaluated against the repository's test suite and
+canonical specifications, not inferred from another framework's surface area.
+
+## Can FastQL run in serverless or embedded environments?
+
+Yes — because there are no runtime dependencies, FastQL can be bundled in a
+Lambda function, a Cloud Run container, or any environment where dependency size
+matters. Use the ASGI adapter behind any ASGI-compatible platform.

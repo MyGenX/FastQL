@@ -50,7 +50,7 @@ async for result in stream:
 
 Runs a subscription and returns an async iterator yielding one `ExecutionResult` per
 source event, or a single `ExecutionResult` (with `executed=False`) when the document
-is invalid or is not a subscription. See [Subscriptions](/advanced/subscriptions).
+is invalid or is not a subscription. See [Subscriptions](/protocol/subscriptions).
 
 ## `execute_incremental`
 
@@ -60,12 +60,12 @@ async for payload in execute_incremental(schema, query):
 ```
 
 Executes an operation as an incremental-delivery stream of JSON payloads for
-`@defer` / `@stream`. See [Incremental delivery](/advanced/incremental-delivery).
+`@defer` / `@stream`. See [Incremental delivery](/protocol/incremental-delivery).
 
 ## Schema extensions
 
 `Schema(query=..., extensions=[...])` (and `build_schema(..., extensions=[...])`)
-attach [schema extensions](/advanced/schema-extensions) that observe the operation
+attach [schema extensions](/data/schema-extensions) that observe the operation
 lifecycle and wrap field resolution.
 
 ## `validate` and `parse`

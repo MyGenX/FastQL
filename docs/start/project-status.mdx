@@ -18,23 +18,23 @@ Core engine and authoring:
 - Parsing, validation, variable coercion, field collection, and async execution
 - Context injection, dependency providers, field extensions, and permissions
 - Introspection, SDL output, CLI serving, and a browser playground
-- [Generic types](/advanced/generic-types) and configurable error masking
+- [Generic types](/build/generic-types) and configurable error masking
 
 Data, performance, and observability:
 
-- [DataLoader](/advanced/dataloader) batching and caching
-- [Schema extensions](/advanced/schema-extensions) (lifecycle hooks + resolver wrapping)
-- [Apollo tracing and OpenTelemetry](/advanced/observability) instrumentation
+- [DataLoader](/data/dataloader) batching and caching
+- [Schema extensions](/data/schema-extensions) (lifecycle hooks + resolver wrapping)
+- [Apollo tracing and OpenTelemetry](/operations/observability) instrumentation
 
 Protocol and ecosystem:
 
-- [Streaming subscriptions](/advanced/subscriptions) over `graphql-transport-ws`,
+- [Streaming subscriptions](/protocol/subscriptions) over `graphql-transport-ws`,
   SSE, and `multipart/mixed`
-- [Incremental delivery](/advanced/incremental-delivery) with `@defer` / `@stream`
-- [Relay pagination](/advanced/relay-pagination) and [Apollo Federation v2](/advanced/federation)
-- [Custom directives, field visibility, and enum customization](/advanced/directives-and-visibility)
-- [File uploads and query batching](/advanced/uploads-and-batching)
-- [Pydantic integration](/advanced/pydantic) and a [test client + schema-export CLI](/advanced/testing-and-export)
+- [Incremental delivery](/protocol/incremental-delivery) with `@defer` / `@stream`
+- [Relay pagination](/data/relay-pagination) and [Apollo Federation v2](/federation/overview)
+- [Custom directives, field visibility, and enum customization](/build/directives-and-visibility)
+- [File uploads and query batching](/protocol/uploads-and-batching)
+- [Pydantic integration](/integrations/pydantic) and a [test client + schema-export CLI](/operations/testing-and-export)
 - ASGI, Starlette, FastAPI, Flask, Django, plus
   [AIOHTTP, Sanic, Litestar, Quart, and Django Channels](/integrations/additional-frameworks) adapters
 
@@ -48,6 +48,23 @@ Protocol and ecosystem:
 - Compatibility should be evaluated against the repository's tests and
   [canonical specifications](/specifications/capability-catalog), not inferred from
   another framework's API.
+
+## Planned
+
+The following documentation topics are deferred until their underlying feature or
+policy exists. They are tracked here so readers can distinguish what is missing
+documentation from what is a missing capability.
+
+- **Schema / query codegen** — Generate TypeScript or Python client types from a
+  FastQL schema. Blocked on agreeing a codegen strategy.
+- **Editor integration / mypy guidance** — Typed stub generation, plugin for
+  `mypy` or `pyright`, IDE support. Blocked on completing the public type surface.
+- **Upgrading & breaking-changes** — Migration guides between major versions.
+  Deferred until a versioning and stability policy exists post-1.0.
+- **Dedicated field-extensions page** — A standalone guide to `FieldExtension`
+  (currently documented alongside permissions). Planned once the API stabilises.
+- **Federation entity interfaces** — `@interfaceObject` and entity interface
+  patterns. Planned when support is implemented.
 
 <Warning>
 Do not expose the development server directly to untrusted networks.

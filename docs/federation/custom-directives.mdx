@@ -1,0 +1,90 @@
+---
+title: Custom federation directives
+description: Use @external, @requires, @provides, @shareable, and @override in FastQL subgraphs.
+---
+
+Beyond `@key`, Apollo Federation v2 provides several directives that control field
+ownership and sharing between subgraphs. All are available as helpers in
+`fastql.federation`.
+
+## `@external` — fields owned by another subgraph
+
+Mark a field as externally owned with `external()`. External fields must be declared
+for `@requires` to reference them but are not resolved by this subgraph.
+
+```python
+from fastql import Field, Type
+from fastql.federation import external, key, requires
+
+@Type(directives=[key("id")])
+class Product:
+    id: str
+    weight: float = Field(directives=[external()])
+
+    @Field(directives=[requires("weight")])
+    def shipping_estimate(self) -> float:
+        return self.weight * 2.5
+```
+
+## `@requires` — computed fields that depend on external data
+
+`requires(fields)` declares that a field computation needs external field values to
+be fetched first. The router forwards those fields in the entity representation.
+
+## `@provides` — eager-load related entity fields
+
+`provides(fields)` tells the router that this subgraph can return the specified
+fields of a related entity without an extra round-trip.
+
+```python
+from fastql.federation import key, provides
+
+@Type(directives=[key("id")])
+class Order:
+    id: str
+    product: "Product" = Field(directives=[provides("name price")])
+```
+
+## `@shareable` — allow a field to be resolved by multiple subgraphs
+
+By default, a non-entity object type's fields may only be resolved by one subgraph.
+Apply `shareable()` to allow other subgraphs to also resolve those fields.
+
+```python
+from fastql import Type
+from fastql.federation import shareable
+
+@Type(directives=[shareable()])
+class Location:
+    lat: float
+    lon: float
+```
+
+## `@override` — migrate a field from another subgraph
+
+`override(from_subgraph)` signals that this subgraph now owns a field that was
+previously owned by another subgraph.
+
+```python
+from fastql import Field, Type
+from fastql.federation import key, override
+
+@Type(directives=[key("id")])
+class Product:
+    id: str
+    inventory: int = Field(directives=[override("inventory-service")])
+```
+
+## `@inaccessible` — hide from the public schema
+
+`inaccessible()` excludes a type or field from the composed public API while still
+making it available inside the federation for `@requires` / `@provides`.
+
+## `@tag` — annotate for contract filtering
+
+`tag(name)` attaches a named tag used with Apollo Contracts to produce filtered
+schema variants.
+
+---
+
+**Previous:** [Entity resolution](/federation/entities) — `@key` and reference resolvers.

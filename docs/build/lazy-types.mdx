@@ -1,0 +1,112 @@
+---
+title: Lazy types and forward references
+description: Use string annotations and forward references to resolve circular type definitions.
+---
+
+FastQL resolves type annotations lazily at `Schema(...)` build time, not at
+decoration time. This means you can use string annotations and Python
+`ForwardRef`s to define types that refer to each other — enabling circular and
+mutually-recursive type graphs without import cycles.
+
+## String annotations (lazy by default with `from __future__ import annotations`)
+
+Adding `from __future__ import annotations` at the top of a module makes all
+annotations strings automatically. FastQL reads these strings and resolves them
+against the module's globals at schema build time.
+
+```python
+from __future__ import annotations
+from fastql import Field, Query, Schema, Type
+
+
+@Type
+class User:
+    id: int
+    posts: list[Post]      # Post is not yet defined — resolved lazily
+
+
+@Type
+class Post:
+    id: int
+    author: User           # circular reference — also fine
+
+
+@Query
+class QueryRoot:
+    @Field
+    def user(self, id: int) -> User:
+        return User(id=id, posts=[])
+
+
+schema = Schema(query=QueryRoot)   # all references resolved here
+```
+
+## Explicit string annotations
+
+Without `from __future__ import annotations`, wrap any forward-referenced type in
+a string:
+
+```python
+from fastql import Field, Type
+
+
+@Type
+class Category:
+    id: int
+    parent: "Category | None" = None   # string forward reference
+    children: "list[Category]"
+```
+
+FastQL's annotation resolver handles `Optional`, `Union` (`X | None`), and
+`list[...]` inside string annotations, matching the same rules as real type hints.
+
+## How resolution works
+
+FastQL's annotation engine (in `fastql.decorators.annotations`) performs the
+following steps at `Schema(...)` build time:
+
+1. **String / `ForwardRef`**: creates a `TypeReference(name, module)` placeholder.
+2. **Schema builder** indexes all decorated types by their Python class name.
+3. **Resolution pass** walks the reachable type graph, replacing each
+   `TypeReference` with its concrete GraphQL type.
+
+If a referenced name cannot be resolved, `Schema(...)` raises a descriptive
+`LookupError` naming the unresolved type.
+
+## Circular types
+
+Circular references — where `A` references `B` and `B` references `A` — are fully
+supported. The schema builder tracks types it has already started building and
+returns a placeholder that is filled in once both sides complete.
+
+```python
+from __future__ import annotations
+from fastql import Field, Input, Type
+
+
+@Type
+class TreeNode:
+    value: int
+    left: TreeNode | None = None
+    right: TreeNode | None = None
+
+
+@Input
+class TreeInput:
+    value: int
+    children: list[TreeInput] | None = None
+```
+
+<Note>
+Circular input types are valid in FastQL's type system but are rejected by the
+GraphQL specification for inputs — attempting to build a schema with a circular
+`Input` graph will raise a validation error at `Schema(...)` build time.
+</Note>
+
+## Troubleshooting
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `LookupError: Unresolved GraphQL type reference: Foo` | `Foo` is not decorated with `@Type` / `@Input` / etc. or is not importable at schema build time | Ensure `Foo` is decorated and in the same module or imported |
+| `NameError` in annotation string | The string annotation references a name that doesn't exist | Check spelling and imports |
+| Circular `Input` type | GraphQL spec disallows it | Use `@Type` for output-side trees; flatten inputs |

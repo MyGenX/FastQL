@@ -31,7 +31,8 @@
           "start/installation",
           "start/quickstart",
           "start/first-schema",
-          "start/project-status"
+          "start/project-status",
+          "start/faq"
         ]
       },
       {
@@ -40,7 +41,10 @@
           "build/types-and-fields",
           "build/inputs-and-abstract-types",
           "build/operations-and-schema",
-          "build/naming-and-configuration"
+          "build/naming-and-configuration",
+          "build/generic-types",
+          "build/directives-and-visibility",
+          "build/lazy-types"
         ]
       },
       {
@@ -50,24 +54,32 @@
           "resolve/context-and-info",
           "resolve/dependencies",
           "resolve/extensions-and-permissions",
-          "resolve/errors-and-nullability"
+          "resolve/errors-and-nullability",
+          "resolve/authentication"
         ]
       },
       {
-        "group": "Advanced capabilities",
+        "group": "Data & performance",
         "pages": [
-          "advanced/dataloader",
-          "advanced/schema-extensions",
-          "advanced/subscriptions",
-          "advanced/incremental-delivery",
-          "advanced/generic-types",
-          "advanced/relay-pagination",
-          "advanced/directives-and-visibility",
-          "advanced/federation",
-          "advanced/uploads-and-batching",
-          "advanced/observability",
-          "advanced/pydantic",
-          "advanced/testing-and-export"
+          "data/dataloader",
+          "data/schema-extensions",
+          "data/relay-pagination"
+        ]
+      },
+      {
+        "group": "Protocol features",
+        "pages": [
+          "protocol/subscriptions",
+          "protocol/incremental-delivery",
+          "protocol/uploads-and-batching"
+        ]
+      },
+      {
+        "group": "Federation",
+        "pages": [
+          "federation/overview",
+          "federation/entities",
+          "federation/custom-directives"
         ]
       },
       {
@@ -78,7 +90,16 @@
           "integrations/flask-and-django",
           "integrations/additional-frameworks",
           "integrations/context",
-          "integrations/http-contract"
+          "integrations/http-contract",
+          "integrations/pydantic"
+        ]
+      },
+      {
+        "group": "Operations",
+        "pages": [
+          "operations/deployment",
+          "operations/testing-and-export",
+          "operations/observability"
         ]
       },
       {
@@ -125,6 +146,20 @@
       }
     ]
   },
+  "redirects": [
+    { "source": "/advanced/dataloader", "destination": "/data/dataloader" },
+    { "source": "/advanced/schema-extensions", "destination": "/data/schema-extensions" },
+    { "source": "/advanced/relay-pagination", "destination": "/data/relay-pagination" },
+    { "source": "/advanced/subscriptions", "destination": "/protocol/subscriptions" },
+    { "source": "/advanced/incremental-delivery", "destination": "/protocol/incremental-delivery" },
+    { "source": "/advanced/uploads-and-batching", "destination": "/protocol/uploads-and-batching" },
+    { "source": "/advanced/federation", "destination": "/federation/overview" },
+    { "source": "/advanced/generic-types", "destination": "/build/generic-types" },
+    { "source": "/advanced/directives-and-visibility", "destination": "/build/directives-and-visibility" },
+    { "source": "/advanced/pydantic", "destination": "/integrations/pydantic" },
+    { "source": "/advanced/testing-and-export", "destination": "/operations/testing-and-export" },
+    { "source": "/advanced/observability", "destination": "/operations/observability" }
+  ],
   "navbar": {
     "links": [
       {

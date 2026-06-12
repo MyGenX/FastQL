@@ -51,7 +51,7 @@ def user(self, id: Annotated[str, Argument(description="User identifier")]) -> U
 
 `@Directive` registers a directive definition whose arguments come from the class's
 type hints. Apply it with `AppliedDirective`, validated at build time. See
-[Custom directives & visibility](/advanced/directives-and-visibility).
+[Custom directives & visibility](/build/directives-and-visibility).
 
 ```python
 from fastql import Directive, Type

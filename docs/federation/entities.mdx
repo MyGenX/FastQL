@@ -1,0 +1,69 @@
+---
+title: Federation entities
+description: Resolve entities by key fields using @key and reference resolvers.
+---
+
+An **entity** is a type that can be referenced across subgraphs. Mark a type as an
+entity by applying a `@key` directive, then register a **reference resolver** that
+rehydrates an entity from its key fields.
+
+## Marking a type as an entity
+
+Use `key(fields)` from `fastql.federation`:
+
+```python
+from fastql import Type
+from fastql.federation import key
+
+@Type(directives=[key("id")])
+class Product:
+    id: str
+    name: str
+    price: float
+```
+
+A type can have multiple `@key` directives if more than one key combination is
+supported.
+
+## Registering a reference resolver
+
+`@reference_resolver(Type)` (or `register_reference`) registers how to rehydrate
+an entity from its representation dict. The resolver receives the raw key fields as
+a `dict` and returns the resolved entity (or `None`).
+
+```python
+from fastql.federation import reference_resolver
+
+PRODUCTS = {"p1": Product(id="p1", name="Widget", price=9.99)}
+
+@reference_resolver(Product)
+def resolve_product(representation: dict) -> Product:
+    return PRODUCTS[representation["id"]]
+```
+
+FastQL exposes this through the auto-generated `_entities(representations:)` root
+field and returns resolved entities in request order.
+
+## Composite keys
+
+Composite `@key` directives use a space-separated field list:
+
+```python
+@Type(directives=[key("sku variation { id }")])
+class ProductVariant:
+    sku: str
+    variation: Variation
+```
+
+The reference resolver receives the full nested representation.
+
+## Per-key exceptions
+
+If a single key cannot be resolved, the resolver may return `None` or raise an
+exception — the error is isolated to that entity slot and does not fail the rest of
+the `_entities` response.
+
+---
+
+**Previous:** [Overview](/federation/overview) — setup and directives.
+**Next:** [Custom federation directives](/federation/custom-directives) — `@external`, `@requires`, and more.

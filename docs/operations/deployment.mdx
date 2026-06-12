@@ -1,0 +1,136 @@
+---
+title: Deployment
+description: Run FastQL in production using framework adapters, ASGI workers, and a streaming-capable subscription transport.
+---
+
+FastQL's core is transport-free: it has no HTTP server, no TLS, and no connection
+management. Production deployment means wrapping the schema in a **framework
+adapter** and running that adapter with a production-grade ASGI server. This page
+covers the standard patterns.
+
+<Warning>
+Never expose `python -m fastql serve` (the development server) directly to
+untrusted networks. It provides no TLS, no authentication, no connection reuse,
+and no production hardening. It is for local exploration only.
+</Warning>
+
+## Choosing a framework adapter
+
+| Use case | Recommended adapter |
+| --- | --- |
+| Pure ASGI | `fastql.asgi.GraphQLApp` |
+| FastAPI | `fastql.fastapi.GraphQLRouter` |
+| Starlette | `fastql.starlette.GraphQLApp` |
+| Flask | `fastql.flask.GraphQLView` |
+| Django | `fastql.django.GraphQLView` |
+| AIOHTTP / Sanic / Litestar / Quart / Channels | See [Additional frameworks](/integrations/additional-frameworks) |
+
+All adapters implement the same [HTTP contract](/integrations/http-contract) and
+share the same context-injection API.
+
+## Basic ASGI deployment (FastAPI + Uvicorn)
+
+```python
+# app.py
+from fastapi import FastAPI
+from fastql.fastapi import GraphQLRouter
+from myapp.schema import schema
+
+app = FastAPI()
+app.include_router(GraphQLRouter(schema), prefix="/graphql")
+```
+
+```bash
+# Production: run with Uvicorn behind a reverse proxy
+uvicorn app:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+For higher concurrency use **Gunicorn with the Uvicorn worker class**:
+
+```bash
+gunicorn app:app \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --workers 4 \
+  --bind 0.0.0.0:8000
+```
+
+## Subscriptions in production
+
+The development server does not support subscription transports. To serve WebSocket
+subscriptions in production:
+
+1. Use an ASGI adapter that exposes WebSocket (`fastql.asgi`, `fastql.starlette`,
+   `fastql.fastapi`, `fastql.aiohttp`, etc.).
+2. Run an ASGI server that supports WebSocket — Uvicorn and Hypercorn both do.
+3. Configure your reverse proxy (nginx, Caddy, AWS ALB) to pass WebSocket
+   upgrade requests through to the ASGI process.
+
+```python
+# Starlette example with WebSocket support built in
+from starlette.applications import Starlette
+from fastql.starlette import GraphQLApp
+
+app = Starlette(routes=[
+    Mount("/graphql", GraphQLApp(schema)),
+])
+```
+
+SSE (`Accept: text/event-stream`) and `multipart/mixed` subscriptions work over
+plain HTTP and do not need special WebSocket configuration — any HTTP/1.1 or
+HTTP/2 connection that supports streaming responses will work.
+
+## Environment variables and configuration
+
+FastQL itself reads no environment variables. Configure your schema, context, and
+adapter in Python code; inject secrets via environment variables at the framework
+or application level:
+
+```python
+import os
+from fastql.fastapi import GraphQLRouter
+
+router = GraphQLRouter(
+    schema,
+    context_getter=lambda req: AppContext(
+        db=get_db(os.environ["DATABASE_URL"]),
+    ),
+)
+```
+
+## Health checks
+
+Expose a lightweight health endpoint alongside GraphQL. With FastAPI:
+
+```python
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+```
+
+GraphQL introspection can also serve as a readiness probe (a successful
+`{ __typename }` query means the schema is loaded and the execution engine is
+ready).
+
+## Containerizing with Docker
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+Expose port `8000` and mount secrets via environment variables or a secrets
+manager rather than baking them into the image.
+
+## What FastQL does not provide
+
+- TLS termination — handle at the reverse proxy or load balancer.
+- Session management or cookie auth — use your framework's middleware.
+- Rate limiting — use a reverse proxy or API gateway layer.
+- Schema stitching / persisted operations — outside the current capability set.
+
+See [Authentication](/resolve/authentication) for integrating auth into the
+request pipeline.

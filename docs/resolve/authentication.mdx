@@ -1,0 +1,151 @@
+---
+title: Authentication
+description: Extract credentials in the transport layer, pass them via context, and enforce access with permissions or field extensions.
+---
+
+FastQL's core has no built-in authentication machinery — authentication is a
+transport concern, and the core is deliberately framework-agnostic. The recommended
+pattern has three layers:
+
+1. **Extract** credentials in the transport layer (middleware, dependency injection).
+2. **Pass** the authenticated identity into resolvers via the `Context` object.
+3. **Enforce** access rules with [permissions or field extensions](/resolve/extensions-and-permissions).
+
+## Step 1 — Extract credentials in the transport layer
+
+Authentication belongs in the framework integration, not in the GraphQL schema.
+Extract the token or session in HTTP middleware or a framework dependency, then
+make the resolved identity available when the context is constructed.
+
+**FastAPI example:**
+
+```python
+from fastapi import Depends, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+security = HTTPBearer(auto_error=False)
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+) -> User | None:
+    if credentials is None:
+        return None
+    return verify_jwt(credentials.credentials)   # your token verification
+```
+
+**ASGI middleware example (framework-agnostic):**
+
+```python
+class AuthMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] in ("http", "websocket"):
+            token = extract_bearer(scope["headers"])
+            scope["user"] = await verify_token(token) if token else None
+        await self.app(scope, receive, send)
+```
+
+## Step 2 — Surface the identity through `Context`
+
+Override `get_context` (or its framework-specific equivalent) to inject the
+resolved identity into the FastQL context:
+
+```python
+from fastql import Context
+from fastapi import Request
+
+
+class AppContext(Context):
+    def __init__(self, user: User | None) -> None:
+        self.user = user
+
+
+# FastAPI integration
+from fastql.fastapi import GraphQLRouter
+
+router = GraphQLRouter(schema)
+
+@router.context_getter
+async def get_context(
+    request: Request,
+    user: User | None = Depends(get_current_user),
+) -> AppContext:
+    return AppContext(user=user)
+```
+
+The ASGI, Starlette, Flask, and Django adapters each have equivalent context
+injection hooks — see the [integrations section](/integrations/overview) for your
+framework.
+
+## Step 3 — Enforce access with permissions
+
+Use `BasePermission` to define reusable access rules and apply them to fields:
+
+```python
+from fastql import Field, Permission, Query, Type
+
+
+class IsAuthenticated(Permission):
+    message = "You must be logged in."
+
+    def has_permission(self, source, info) -> bool:
+        return info.context.user is not None
+
+
+class IsAdmin(Permission):
+    message = "Admin access required."
+
+    def has_permission(self, source, info) -> bool:
+        user = info.context.user
+        return user is not None and user.is_admin
+
+
+@Query
+class QueryRoot:
+    @Field(permissions=[IsAuthenticated])
+    def me(self, info) -> User:
+        return info.context.user
+
+    @Field(permissions=[IsAuthenticated, IsAdmin])
+    def admin_stats(self, info) -> AdminStats:
+        return fetch_admin_stats()
+```
+
+When a permission check fails, FastQL returns a field error with the permission's
+`message` and `null` for the field value (subject to the field's nullability).
+
+## Field extensions for cross-cutting auth rules
+
+For rules that apply to many fields, a field extension is cleaner than repeating
+`permissions=[...]` everywhere:
+
+```python
+from fastql import FieldExtension, Schema, SchemaExtension
+
+
+class RequireAuthExtension(FieldExtension):
+    async def resolve(self, next_, source, info, **kwargs):
+        if info.context.user is None:
+            raise PermissionError("Authentication required.")
+        return await next_(source, info, **kwargs)
+```
+
+See [Extensions and permissions](/resolve/extensions-and-permissions) for the full
+field extension API.
+
+## What not to do
+
+<Warning>
+Do not perform authentication inside field resolvers. Resolvers are called per-field
+and may run in parallel — putting auth logic there makes it easy to miss a field,
+hard to test, and expensive to audit.
+</Warning>
+
+- **Don't** verify tokens inside `@Field` resolvers.
+- **Don't** put credentials in GraphQL arguments — they appear in logs and
+  introspection.
+- **Do** use the transport layer for extraction and `Permission` / field extensions
+  for enforcement.

@@ -24,8 +24,8 @@ errors return `executed=False`; runtime errors remain attached to an executed re
 Validation runs a broad rule set — fragment cycles, known and correctly-located
 directives, possible fragment spreads, lone anonymous operation, name uniqueness, and
 overlapping-fields-can-be-merged — alongside the type and argument checks. Beyond
-`execute`, the same engine powers [`subscribe`](/advanced/subscriptions) (an async
+`execute`, the same engine powers [`subscribe`](/protocol/subscriptions) (an async
 iterator of results per source event) and
-[`execute_incremental`](/advanced/incremental-delivery) (`@defer` / `@stream`
+[`execute_incremental`](/protocol/incremental-delivery) (`@defer` / `@stream`
 payloads), and an optional masking policy can replace unexpected resolver errors with
 a generic message.

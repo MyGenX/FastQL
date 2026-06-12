@@ -1,0 +1,70 @@
+---
+title: Apollo Federation v2 — Overview
+description: Add FastQL subgraphs to an Apollo Federation supergraph.
+---
+
+`fastql.federation` adds Apollo Federation v2 support to any FastQL schema:
+federation directives as applied-directive metadata, a federated-SDL printer with
+the `@link` import header, and the `_service` / `_entities` machinery for entity
+resolution.
+
+## Installation
+
+Federation support is built into FastQL — no extra install required. Import from
+`fastql.federation`:
+
+```python
+from fastql.federation import (
+    key, shareable, reference_resolver, print_federated_schema,
+)
+```
+
+## Defining a federated schema
+
+Decorate types with federation directives and build a regular `Schema`. FastQL
+injects the `_service { sdl }` root, the `_Any` / `_Entity` / `_Service` types,
+and the `_entities(representations:)` root field automatically.
+
+```python
+from fastql import Field, Query, Schema, Type
+from fastql.federation import key, shareable, print_federated_schema
+
+
+@Type(directives=[key("id"), shareable()])
+class Product:
+    id: str
+    name: str
+
+
+@Query
+class QueryRoot:
+    @Field
+    def product(self, id: str) -> Product | None:
+        return PRODUCTS.get(id)
+
+
+schema = Schema(query=QueryRoot)
+sdl = print_federated_schema(schema)   # includes the @link(url: ...) header
+```
+
+`print_federated_schema` produces the federation-annotated SDL that the Apollo
+Router ingests as the subgraph SDL.
+
+## Available directive helpers
+
+| Helper | SDL directive | Placement |
+| --- | --- | --- |
+| `key(fields)` | `@key(fields: ...)` | `@Type(directives=[...])` |
+| `shareable()` | `@shareable` | `@Type` or `@Field` |
+| `external()` | `@external` | `@Field` |
+| `requires(fields)` | `@requires(fields: ...)` | `@Field` |
+| `provides(fields)` | `@provides(fields: ...)` | `@Field` |
+| `inaccessible()` | `@inaccessible` | `@Type` or `@Field` |
+| `override(from_subgraph)` | `@override(from: ...)` | `@Field` |
+| `tag(name)` | `@tag(name: ...)` | `@Type` or `@Field` |
+
+All helpers are applied via `@Type(directives=[...])` or `@Field(directives=[...])`.
+
+---
+
+**Next:** [Entity resolution](/federation/entities) — `@key` and reference resolvers.
