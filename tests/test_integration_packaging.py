@@ -28,16 +28,34 @@ def test_runtime_version_matches_distribution_metadata():
     assert fastql.__version__ == PYPROJECT["project"]["version"]
 
 
+#: Adapters whose extra pulls in exactly one framework, so their dependency
+#: lists must be mutually exclusive. ``channels`` is excluded because it
+#: intentionally also depends on Django (its HTTP side).
+_STANDALONE_ADAPTERS = (
+    "starlette",
+    "fastapi",
+    "flask",
+    "django",
+    "aiohttp",
+    "sanic",
+    "litestar",
+    "quart",
+)
+
+#: Every adapter extra that should be folded into ``all``.
+_ALL_ADAPTERS = _STANDALONE_ADAPTERS + ("channels",)
+
+
 def test_every_adapter_has_an_independent_extra_and_all_is_the_union():
     extras = PYPROJECT["project"]["optional-dependencies"]
-    assert set(("asgi", "starlette", "fastapi", "flask", "django", "all")) <= set(extras)
+    assert set(("asgi", *_ALL_ADAPTERS, "all")) <= set(extras)
     assert extras["asgi"] == []
-    for name in ("starlette", "fastapi", "flask", "django"):
+    for name in _STANDALONE_ADAPTERS:
         own = " ".join(extras[name]).lower()
         assert name in own
-        for unrelated in {"starlette", "fastapi", "flask", "django"} - {name}:
+        for unrelated in set(_STANDALONE_ADAPTERS) - {name}:
             assert unrelated not in own
-    expected = set().union(*(extras[name] for name in ("starlette", "fastapi", "flask", "django")))
+    expected = set().union(*(extras[name] for name in _ALL_ADAPTERS))
     assert set(extras["all"]) == expected
 
 
@@ -65,7 +83,7 @@ assert not loaded, loaded
 
 
 def test_missing_adapter_errors_name_the_installation_extra():
-    for name in ("starlette", "fastapi", "flask", "django"):
+    for name in _ALL_ADAPTERS:
         source = (ROOT / "fastql" / "integrations" / f"{name}.py").read_text()
         tree = ast.parse(source)
         messages = [

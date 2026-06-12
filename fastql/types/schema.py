@@ -17,7 +17,7 @@ from fastql.types.definition import (
     ScalarType,
     UnionType,
 )
-from fastql.types.scalars import Boolean, String
+from fastql.types.scalars import Boolean, Int, String
 from fastql.types.wrappers import ListType, NonNull
 
 NamedType = ScalarType | ObjectType | InterfaceType | UnionType | EnumType | InputObjectType
@@ -151,6 +151,31 @@ def default_directives() -> dict[str, DirectiveDefinition]:
             locations=["FIELD_DEFINITION", "ARGUMENT_DEFINITION", "ENUM_VALUE"],
             args={"reason": Argument(String, default_value="No longer supported")},
             description="Marks an element as deprecated.",
+        ),
+        "defer": DirectiveDefinition(
+            name="defer",
+            locations=["FRAGMENT_SPREAD", "INLINE_FRAGMENT"],
+            args={
+                "if": Argument(NonNull(Boolean), default_value=True),
+                "label": Argument(String),
+            },
+            description=(
+                "Delays delivery of the marked fragment to a later incremental "
+                "payload over a streaming transport."
+            ),
+        ),
+        "stream": DirectiveDefinition(
+            name="stream",
+            locations=["FIELD"],
+            args={
+                "if": Argument(NonNull(Boolean), default_value=True),
+                "initialCount": Argument(NonNull(Int), default_value=0),
+                "label": Argument(String),
+            },
+            description=(
+                "Streams a list field: initial items are returned immediately and "
+                "the rest arrive in later incremental payloads."
+            ),
         ),
     }
 

@@ -49,7 +49,12 @@ from fastql.decorators import (
     enum_value,
 )
 from fastql.errors import GraphQLError, GraphQLSyntaxError, ValidationError
-from fastql.execution import ExecutionResult, execute, subscribe
+from fastql.execution import (
+    ExecutionResult,
+    execute,
+    execute_incremental,
+    subscribe,
+)
 from fastql.extensions import SchemaExtension
 from fastql.language import parse
 from fastql.registry import TypeRegistry, default_registry
@@ -127,6 +132,7 @@ __all__ = [
     "build_schema",
     "SchemaBuildError",
     "execute",
+    "execute_incremental",
     "subscribe",
     "ExecutionResult",
     "validate",

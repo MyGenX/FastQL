@@ -337,6 +337,7 @@ class _Validator:
             return
 
         self._validate_arguments(field, field_def)
+        self._validate_stream_directive(field, field_def)
 
         named = _named_type(field_def.type)
         if isinstance(named, _LEAF):
@@ -354,6 +355,22 @@ class _Validator:
                 )
             else:
                 self._validate_selection_set(field.selection_set, named)
+
+    def _validate_stream_directive(
+        self, field: ast.FieldNode, field_def: Any
+    ) -> None:
+        """``@stream`` may only annotate a list-typed field."""
+        if not any(d.name.value == "stream" for d in field.directives):
+            return
+        type_ref = field_def.type
+        if isinstance(type_ref, NonNull):
+            type_ref = type_ref.of_type
+        if not isinstance(type_ref, ListType):
+            self._error(
+                f"Directive '@stream' may only be used on list fields, but field "
+                f"{field.name.value!r} is not a list.",
+                field,
+            )
 
     def _validate_arguments(self, field: ast.FieldNode, field_def: Any) -> None:
         self._check_unique_arguments(

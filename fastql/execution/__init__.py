@@ -5,7 +5,15 @@ from fastql.execution.execute import (
     Info,
     ResolveInfo,
     execute,
+    execute_incremental,
     subscribe,
 )
 
-__all__ = ["execute", "subscribe", "ExecutionResult", "Info", "ResolveInfo"]
+__all__ = [
+    "execute",
+    "execute_incremental",
+    "subscribe",
+    "ExecutionResult",
+    "Info",
+    "ResolveInfo",
+]

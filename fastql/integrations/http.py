@@ -10,7 +10,7 @@ from typing import Any, Awaitable, Callable, Mapping
 
 from fastql.context import Context
 from fastql.errors import GraphQLSyntaxError
-from fastql.execution import ExecutionResult, execute, subscribe
+from fastql.execution import ExecutionResult, execute, execute_incremental, subscribe
 from fastql.integrations.multipart import (
     MultipartRequestError,
     parse_multipart_request,
@@ -346,6 +346,11 @@ class GraphQLHTTPHandler:
         is_streaming_subscription = (
             operation_type == "subscription" and stream_media_type is not None
         )
+        is_incremental = (
+            operation_type == "query"
+            and stream_media_type is not None
+            and _uses_incremental(query)
+        )
         if (
             request.method == "GET"
             and operation_type != "query"
@@ -357,6 +362,31 @@ class GraphQLHTTPHandler:
 
         try:
             context, root_value, base_context = await self.execution_values(request)
+            if is_incremental:
+                results = execute_incremental(
+                    self.schema,
+                    query,
+                    variable_values=payload.get("variables"),
+                    context=context,
+                    operation_name=operation_name,
+                    root_value=root_value,
+                    **self.execution_options,
+                )
+                if stream_media_type == "text/event-stream":
+                    response = HTTPResponse.stream(
+                        200,
+                        sse_stream(results),
+                        "text/event-stream; charset=utf-8",
+                    )
+                    response.headers["cache-control"] = "no-cache"
+                else:
+                    response = HTTPResponse.stream(
+                        200,
+                        multipart_stream(results),
+                        f'multipart/mixed; boundary="{MULTIPART_BOUNDARY}"',
+                    )
+                self._apply_context_headers(response, base_context, context)
+                return response
             if is_streaming_subscription:
                 result_stream = await subscribe(
                     self.schema,
@@ -562,6 +592,31 @@ def _response_media_type(request: HTTPRequest) -> str:
     if "application/graphql-response+json" in accepted:
         return "application/graphql-response+json"
     return "application/json"
+
+
+def _uses_incremental(query: str) -> bool:
+    """True when the document applies ``@defer`` or ``@stream`` anywhere."""
+    try:
+        document = parse(query)
+    except GraphQLSyntaxError:
+        return False
+    return _scan_incremental(document)
+
+
+def _scan_incremental(node: Any) -> bool:
+    if isinstance(node, ast.DirectiveNode):
+        return node.name.value in ("defer", "stream")
+    selections = getattr(node, "selections", None)
+    if selections is not None and any(_scan_incremental(s) for s in selections):
+        return True
+    for attr in ("definitions", "directives"):
+        items = getattr(node, attr, None)
+        if items and any(_scan_incremental(item) for item in items):
+            return True
+    selection_set = getattr(node, "selection_set", None)
+    if selection_set is not None and _scan_incremental(selection_set):
+        return True
+    return False
 
 
 def _stream_media_type(request: HTTPRequest) -> str | None:

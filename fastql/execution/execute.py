@@ -17,7 +17,7 @@ from typing import Any
 
 from fastql.context import Info, ResolveInfo, build_injection_plan
 from fastql.errors import GraphQLError, GraphQLSyntaxError
-from fastql.execution.collect_fields import collect_fields
+from fastql.execution.collect_fields import DeferredFragment, collect_fields
 from fastql.extensions import (
     ExtensionExecutionContext,
     bind_execution_context,
@@ -61,6 +61,29 @@ class ExecutionResult:
 
 class _NullBubble(Exception):
     """Internal signal that a non-null position produced null and must propagate."""
+
+
+@dataclass
+class _DeferJob:
+    """A ``@defer``-marked fragment awaiting resolution at ``path``."""
+
+    object_type: Any
+    source: Any
+    path: list
+    fragment: DeferredFragment
+
+
+@dataclass
+class _StreamJob:
+    """Remaining ``@stream`` list items awaiting incremental delivery."""
+
+    of_type: Any
+    field_nodes: list
+    path: list
+    items: list
+    next_index: int
+    info: Any
+    label: str | None = None
 
 
 _BUBBLE = object()
@@ -207,6 +230,65 @@ async def subscribe(
     return await executor.create_source_event_stream(operation)
 
 
+async def execute_incremental(
+    schema: Any,
+    query: str | Source | ast.DocumentNode,
+    variable_values: dict[str, Any] | None = None,
+    context: Any = None,
+    operation_name: str | None = None,
+    root_value: Any = None,
+    *,
+    mask_errors: bool = False,
+    mask_message: str = _DEFAULT_MASK_MESSAGE,
+):
+    """Execute an operation as an incremental-delivery stream.
+
+    Returns an async iterator of JSON-shaped payload ``dict`` s: the initial
+    ``{data, hasNext}`` followed by ``{incremental: [...], hasNext}`` payloads for
+    each ``@defer`` fragment and ``@stream`` list chunk. When the operation uses
+    no incremental directives the stream is a single ``hasNext: false`` payload,
+    so callers may always run it; non-streaming transports should instead call
+    :func:`execute`, which resolves everything inline into one result.
+    """
+    if isinstance(query, (str, Source)):
+        try:
+            document = parse(query)
+        except GraphQLSyntaxError as error:
+            yield {"data": None, "errors": [error.formatted()], "hasNext": False}
+            return
+    else:
+        document = query
+
+    operation, op_error = _get_operation(document, operation_name)
+    if op_error is not None:
+        yield {"data": None, "errors": [op_error.formatted()], "hasNext": False}
+        return
+
+    validation_errors = validate(schema, document)
+    if validation_errors:
+        yield {
+            "data": None,
+            "errors": [error.formatted() for error in validation_errors],
+            "hasNext": False,
+        }
+        return
+
+    try:
+        coerced_variables = coerce_variable_values(
+            schema, operation, variable_values or {}
+        )
+    except GraphQLError as error:
+        yield {"data": None, "errors": [error.formatted()], "hasNext": False}
+        return
+
+    executor = _Executor(
+        schema, document, coerced_variables, context, operation, root_value,
+        (), mask_errors, mask_message, incremental=True,
+    )
+    async for payload in executor.run_incremental(operation):
+        yield payload
+
+
 def _get_operation(
     document: ast.DocumentNode, operation_name: str | None
 ) -> tuple[ast.OperationDefinitionNode | None, GraphQLError | None]:
@@ -231,6 +313,7 @@ class _Executor:
     def __init__(
         self, schema, document, variable_values, context, operation, root_value,
         extensions=(), mask_errors=False, mask_message=_DEFAULT_MASK_MESSAGE,
+        incremental=False,
     ) -> None:
         self.schema = schema
         self.variable_values = variable_values
@@ -240,6 +323,9 @@ class _Executor:
         self.root_value = root_value
         self.mask_errors = mask_errors
         self.mask_message = mask_message
+        self.incremental = incremental
+        self.deferred: list[_DeferJob] = []
+        self.streamed: list[_StreamJob] = []
         self.resolve_extensions = [
             ext for ext in extensions if has_resolve_override(ext)
         ]
@@ -272,10 +358,16 @@ class _Executor:
                 )
             )
             return None
+        deferred: list[DeferredFragment] | None = [] if self.incremental else None
         grouped = collect_fields(
             self.schema, root_type, operation.selection_set,
-            self.variable_values, self.fragments,
+            self.variable_values, self.fragments, deferred=deferred,
         )
+        if deferred:
+            for fragment in deferred:
+                self.deferred.append(
+                    _DeferJob(root_type, self.root_value, [], fragment)
+                )
         serial = operation.operation == "mutation"
         try:
             return await self._execute_fields(
@@ -290,6 +382,110 @@ class _Executor:
             "mutation": self.schema.mutation,
             "subscription": self.schema.subscription,
         }.get(operation)
+
+    # -- incremental delivery (@defer / @stream) ------------------------------
+
+    async def run_incremental(self, operation):
+        """Yield the initial payload, then one payload per deferred/streamed job.
+
+        Each payload is a JSON-shaped ``dict``: the first carries ``data`` and
+        ``hasNext``; subsequent ones carry an ``incremental`` list (``data`` for
+        deferred fragments, ``items`` for streamed list entries) and ``hasNext``,
+        the last of which is ``false``.
+        """
+        self.errors = []
+        data = await self.execute_operation(operation)
+        initial_errors = list(self.errors)
+        payload: dict[str, Any] = {
+            "data": data,
+            "hasNext": bool(self.deferred or self.streamed),
+        }
+        if initial_errors:
+            payload["errors"] = [error.formatted() for error in initial_errors]
+        yield payload
+
+        while self.deferred or self.streamed:
+            self.errors = []
+            if self.deferred:
+                entry = await self._resolve_deferred(self.deferred.pop(0))
+            else:
+                entry = await self._resolve_stream_item()
+            yield {
+                "incremental": [entry],
+                "hasNext": bool(self.deferred or self.streamed),
+            }
+
+    async def _resolve_deferred(self, job: _DeferJob) -> dict[str, Any]:
+        nested: list[DeferredFragment] = []
+        grouped = collect_fields(
+            self.schema, job.object_type, job.fragment.selection_set,
+            self.variable_values, self.fragments, deferred=nested,
+        )
+        for fragment in nested:
+            self.deferred.append(
+                _DeferJob(job.object_type, job.source, list(job.path), fragment)
+            )
+        try:
+            data = await self._execute_fields(
+                job.object_type, job.source, grouped, list(job.path), serial=False
+            )
+        except _NullBubble:
+            data = None
+        entry: dict[str, Any] = {"data": data, "path": list(job.path)}
+        if job.fragment.label is not None:
+            entry["label"] = job.fragment.label
+        if self.errors:
+            entry["errors"] = [error.formatted() for error in self.errors]
+        return entry
+
+    async def _resolve_stream_item(self) -> dict[str, Any]:
+        job = self.streamed[0]
+        index = job.next_index
+        item = job.items.pop(0)
+        item_path = job.path + [index]
+        try:
+            completed = await self._complete_value(
+                job.of_type, job.field_nodes, item_path, item, job.info
+            )
+        except _NullBubble:
+            completed = None
+        job.next_index += 1
+        if not job.items:
+            self.streamed.pop(0)
+        entry: dict[str, Any] = {"items": [completed], "path": item_path}
+        if job.label is not None:
+            entry["label"] = job.label
+        if self.errors:
+            entry["errors"] = [error.formatted() for error in self.errors]
+        return entry
+
+    def _stream_arguments(self, field_node) -> tuple[int, str | None] | None:
+        """Return ``(initialCount, label)`` for an ``@stream`` field, else ``None``."""
+        for directive in field_node.directives:
+            if directive.name.value != "stream":
+                continue
+            enabled = True
+            initial_count = 0
+            label: str | None = None
+            for argument in directive.arguments:
+                name = argument.name.value
+                value = argument.value
+                if name == "if":
+                    if isinstance(value, ast.VariableNode):
+                        enabled = bool(self.variable_values.get(value.name.value))
+                    elif isinstance(value, ast.BooleanValueNode):
+                        enabled = value.value
+                elif name == "initialCount":
+                    if isinstance(value, ast.VariableNode):
+                        initial_count = int(
+                            self.variable_values.get(value.name.value) or 0
+                        )
+                    elif isinstance(value, ast.IntValueNode):
+                        initial_count = int(value.value)
+                elif name == "label" and isinstance(value, ast.StringValueNode):
+                    label = value.value
+            return (initial_count, label) if enabled else None
+        return None
 
     # -- subscriptions --------------------------------------------------------
 
@@ -544,7 +740,13 @@ class _Executor:
             object_type = self._resolve_concrete_type(type_ref, result, field_nodes, path)
             if object_type is None:
                 return None
-            subfields = self._collect_subfields(object_type, field_nodes)
+            deferred: list[DeferredFragment] | None = [] if self.incremental else None
+            subfields = self._collect_subfields(object_type, field_nodes, deferred)
+            if deferred:
+                for fragment in deferred:
+                    self.deferred.append(
+                        _DeferJob(object_type, result, list(path), fragment)
+                    )
             try:
                 return await self._execute_fields(
                     object_type, result, subfields, path, serial=False
@@ -567,6 +769,19 @@ class _Executor:
 
         of_type = type_ref.of_type
         items = list(result)
+
+        stream = self._stream_arguments(field_nodes[0]) if self.incremental else None
+        if stream is not None:
+            initial_count = max(0, stream[0])
+            remaining = items[initial_count:]
+            items = items[:initial_count]
+            if remaining:
+                self.streamed.append(
+                    _StreamJob(
+                        of_type, field_nodes, list(path), remaining,
+                        initial_count, info, stream[1],
+                    )
+                )
 
         async def complete_item(index, item):
             try:
@@ -620,14 +835,14 @@ class _Executor:
             return None
         return runtime
 
-    def _collect_subfields(self, object_type, field_nodes):
+    def _collect_subfields(self, object_type, field_nodes, deferred=None):
         merged: dict[str, list[ast.FieldNode]] = {}
         for node in field_nodes:
             if node.selection_set is None:
                 continue
             sub = collect_fields(
                 self.schema, object_type, node.selection_set,
-                self.variable_values, self.fragments,
+                self.variable_values, self.fragments, deferred=deferred,
             )
             for key, nodes in sub.items():
                 merged.setdefault(key, []).extend(nodes)
@@ -808,4 +1023,11 @@ def _injection_plan(resolver):
 _MISSING_DEPENDENCY = object()
 
 
-__all__ = ["execute", "subscribe", "ExecutionResult", "Info", "ResolveInfo"]
+__all__ = [
+    "execute",
+    "execute_incremental",
+    "subscribe",
+    "ExecutionResult",
+    "Info",
+    "ResolveInfo",
+]
