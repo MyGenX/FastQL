@@ -54,11 +54,29 @@
         ]
       },
       {
+        "group": "Advanced capabilities",
+        "pages": [
+          "advanced/dataloader",
+          "advanced/schema-extensions",
+          "advanced/subscriptions",
+          "advanced/incremental-delivery",
+          "advanced/generic-types",
+          "advanced/relay-pagination",
+          "advanced/directives-and-visibility",
+          "advanced/federation",
+          "advanced/uploads-and-batching",
+          "advanced/observability",
+          "advanced/pydantic",
+          "advanced/testing-and-export"
+        ]
+      },
+      {
         "group": "Integrations",
         "pages": [
           "integrations/overview",
           "integrations/asgi-and-api-frameworks",
           "integrations/flask-and-django",
+          "integrations/additional-frameworks",
           "integrations/context",
           "integrations/http-contract"
         ]

@@ -1,0 +1,38 @@
+---
+title: Generic types
+description: Author reusable generic types and concretize them per parametrization.
+---
+
+`@Type`, `@Input`, and `@Interface` accept `Generic[T]`. Each unique parametrization
+is synthesized into one concrete GraphQL type at build time and memoized, so the same
+parametrization always resolves to the same named type.
+
+```python
+from typing import Generic, TypeVar
+from fastql import Field, Query, Schema, Type
+
+T = TypeVar("T")
+
+
+@Type
+class Page(Generic[T]):
+    total: int
+    items: list[T]
+
+
+@Type
+class User:
+    id: int
+
+
+@Query
+class Queries:
+    @Field
+    def users(self) -> Page[User]:
+        return Page(total=1, items=[User(1)])
+```
+
+The example synthesizes a `UserPage` type whose `items` field is typed `[User!]!`.
+Synthetic names are derived from the parameter (`User` + `Page` → `UserPage`); pass a
+`name` template with a `{}` placeholder to override the naming scheme. `TypeVar`
+fields are resolved against the concrete parameters at each parametrization site.

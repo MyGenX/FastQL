@@ -1,0 +1,41 @@
+---
+title: DataLoader
+description: Batch and cache per-request loads to eliminate N+1 queries.
+---
+
+`DataLoader` coalesces many individual `load(key)` calls made within one event-loop
+tick into a single batch function call, and caches each key for the life of the
+loader. Create one loader per request (usually on your `Context`) so its cache and
+batching stay request-scoped.
+
+```python
+from fastql import Context, DataLoader, Field, Type, Query
+
+
+async def load_users(keys: list[int]) -> list[object]:
+    rows = await db.fetch_users(keys)          # one query for every key
+    by_id = {row.id: row for row in rows}
+    return [by_id.get(key) for key in keys]    # aligned to keys, one entry each
+
+
+class AppContext(Context):
+    def __init__(self) -> None:
+        self.users = DataLoader(load_users)
+
+
+@Type
+class Post:
+    author_id: int
+
+    @Field
+    async def author(self, ctx: Context) -> "User":
+        return await ctx.users.load(self.author_id)
+```
+
+The batch function receives the list of distinct keys and must return a list of the
+same length, in the same order. Per-key exceptions are mapped back to the matching
+`load()` future, so one failed key does not fail the rest.
+
+- `max_batch_size` chunks large batches into several calls.
+- `cache=False` disables per-key caching; `cache_key_fn` customizes the cache key.
+- `load_many`, `prime`, `clear`, and `clear_all` manage the queue and cache.

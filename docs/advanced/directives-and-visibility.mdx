@@ -1,0 +1,56 @@
+---
+title: Custom directives & field visibility
+description: Author schema directives, mark fields private or external, and customize enums.
+---
+
+## Custom directives
+
+`@Directive` registers a directive definition; its arguments are derived from the
+class's type hints. Apply it to types, fields, or arguments with `AppliedDirective`,
+whose locations and argument types are validated at build time and rendered in the SDL.
+
+```python
+from fastql import Argument, Directive, Field, Type
+from fastql.types import AppliedDirective
+
+
+@Directive(locations=["FIELD_DEFINITION", "OBJECT"], description="tag things")
+class tag:
+    name: str
+
+
+@Type(directives=[AppliedDirective("tag", {"name": "obj"})])
+class Widget:
+    id: int
+
+    @Field(directives=[AppliedDirective("tag", {"name": "fieldlevel"})])
+    def label(self) -> str:
+        return "w"
+```
+
+## Field visibility
+
+`Field(private=True)` keeps a Python attribute off the GraphQL schema (still readable
+by resolvers); `Field(external=True)` marks a field as federation-`@external`.
+
+```python
+@Type
+class User:
+    handle: str
+    secret: str = Field(private=True)        # excluded from the schema
+```
+
+## Enum customization
+
+`enum_value` sets a member's GraphQL name, description, or deprecation.
+
+```python
+from fastql import Enum, enum_value
+
+
+@Enum
+class Color:
+    RED = "red"
+    GREEN = enum_value("green", description="leafy", deprecation_reason="use RED")
+    BLUE = enum_value("blue", name="AZURE")  # exposed as AZURE
+```

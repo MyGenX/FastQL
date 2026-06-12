@@ -46,3 +46,43 @@ from fastql import Argument, Field
 def user(self, id: Annotated[str, Argument(description="User identifier")]) -> User:
     ...
 ```
+
+## Custom directives
+
+`@Directive` registers a directive definition whose arguments come from the class's
+type hints. Apply it with `AppliedDirective`, validated at build time. See
+[Custom directives & visibility](/advanced/directives-and-visibility).
+
+```python
+from fastql import Directive, Type
+from fastql.types import AppliedDirective
+
+
+@Directive(locations=["FIELD_DEFINITION", "OBJECT"], repeatable=False)
+class tag:
+    name: str
+
+
+@Type(directives=[AppliedDirective("tag", {"name": "obj"})])
+class Widget: ...
+```
+
+## Field visibility
+
+`Field(private=True)` keeps a Python attribute off the schema (still readable by
+resolvers); `Field(external=True)` marks a field as federation-`@external`.
+
+## Enum customization
+
+`enum_value(...)` overrides a member's GraphQL `name`, `description`, or
+`deprecation_reason`.
+
+```python
+from fastql import Enum, enum_value
+
+
+@Enum
+class Color:
+    RED = "red"
+    BLUE = enum_value("blue", name="AZURE", description="cool")
+```

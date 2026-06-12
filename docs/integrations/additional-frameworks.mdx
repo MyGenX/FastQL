@@ -1,0 +1,38 @@
+---
+title: AIOHTTP, Sanic, Litestar, Quart & Channels
+description: Adapters for additional Python web frameworks.
+---
+
+Beyond ASGI, Starlette, FastAPI, Flask, and Django, FastQL ships adapters for five
+more frameworks. Each lives behind its own extra, imports its framework lazily, and
+delegates to the same shared HTTP and subscription handlers.
+
+```bash
+pip install mygenx-fastql[aiohttp]    # or sanic, litestar, quart, channels
+```
+
+| Framework | Factory | Subscriptions |
+| --- | --- | --- |
+| AIOHTTP | `create_aiohttp_app(schema)` → `web.Application` | WebSocket + SSE/multipart |
+| Sanic | `create_sanic_blueprint(schema)` → `Blueprint` | SSE/multipart |
+| Litestar | `create_litestar_router(schema)` → `Router` | WebSocket + SSE/multipart |
+| Quart | `create_quart_blueprint(schema)` → `Blueprint` | WebSocket + SSE/multipart |
+| Django Channels | `create_channels_application(schema)` / `GraphQLWebSocketConsumer` | WebSocket |
+
+```python
+from aiohttp import web
+from fastql.integrations.aiohttp import create_aiohttp_app
+
+app = create_aiohttp_app(schema, graphiql=True)
+web.run_app(app)
+```
+
+Every factory accepts the same `path`, `graphiql`, context, and endpoint options as
+the other adapters. Importing an adapter without its framework installed raises an
+`ImportError` that names the matching extra.
+
+<Note>
+Sanic does not allow an HTTP `GET` route and a WebSocket to share one URI, so the
+Sanic adapter serves subscriptions over the SSE / `multipart` HTTP transports rather
+than a same-path `graphql-transport-ws` socket.
+</Note>

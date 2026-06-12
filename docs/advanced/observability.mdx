@@ -1,0 +1,38 @@
+---
+title: Tracing & observability
+description: Apollo-style tracing and OpenTelemetry spans via schema extensions.
+---
+
+Both tracers are [schema extensions](/advanced/schema-extensions), so they attach with
+`Schema(extensions=[...])` and add no cost when absent.
+
+## Apollo tracing
+
+`ApolloTracingExtension` merges per-operation and per-field timing into
+`ExecutionResult.extensions["tracing"]`.
+
+```python
+from fastql import Schema
+from fastql.tracing import ApolloTracingExtension
+
+schema = Schema(query=Query, extensions=[ApolloTracingExtension()])
+```
+
+## OpenTelemetry
+
+`OpenTelemetryExtension` emits an operation span and a child span per resolved field.
+It lives behind the `[opentelemetry]` extra and imports the dependency lazily.
+
+```bash
+pip install mygenx-fastql[opentelemetry]
+```
+
+```python
+from fastql.opentelemetry import OpenTelemetryExtension
+
+schema = Schema(query=Query, extensions=[OpenTelemetryExtension()])
+```
+
+Pass a custom `tracer=` to integrate with an existing provider. Without the extra
+installed, instantiating the extension raises an `ImportError` naming
+`mygenx-fastql[opentelemetry]`; the core itself never imports OpenTelemetry.

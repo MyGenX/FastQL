@@ -1,0 +1,36 @@
+---
+title: Schema extensions
+description: Hook into the operation lifecycle and wrap every field resolution.
+---
+
+A `SchemaExtension` observes or wraps the phases of an operation — parsing,
+validation, execution, and each field `resolve` — and can contribute data to the
+response `extensions` map. Pass instances (or classes) to `Schema(extensions=[...])`.
+
+```python
+from fastql import Schema, SchemaExtension
+
+
+class Timing(SchemaExtension):
+    def on_operation(self):
+        start = time.perf_counter()
+        yield                                   # run the operation
+        self.elapsed = time.perf_counter() - start
+
+    async def resolve(self, next_, source, info, **kwargs):
+        return await next_(source, info, **kwargs)
+
+    def get_results(self) -> dict:
+        return {"timing": {"seconds": self.elapsed}}
+
+
+schema = Schema(query=Query, extensions=[Timing()])
+```
+
+Lifecycle hooks (`on_operation`, `on_parse`, `on_validate`, `on_execute`) are
+generators that `yield` once around the phase; `resolve` wraps each field and must
+call `next_`. Hooks may be sync or async. When no extension overrides `resolve`, the
+executor skips the wrapper entirely, so the feature is zero-cost when unused.
+
+Anything returned from `get_results()` is merged into `ExecutionResult.extensions`.
+[Apollo tracing and OpenTelemetry](/advanced/observability) are built on this hook.

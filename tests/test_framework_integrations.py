@@ -265,3 +265,149 @@ async def test_django_async_view_executes_with_request_state():
         "ping": "pong",
         "framework": "django",
     }
+
+
+# -- additional framework adapters (Phase 4) ---------------------------------
+
+
+@pytest.mark.parametrize(
+    "module, extra",
+    [
+        ("aiohttp", "aiohttp"),
+        ("sanic", "sanic"),
+        ("litestar", "litestar"),
+        ("quart", "quart"),
+        ("channels", "channels"),
+    ],
+)
+def test_additional_adapter_names_its_extra_when_missing(module, extra):
+    """When the framework is absent, importing the adapter names its extra."""
+    try:
+        __import__(module)
+    except ImportError:
+        with pytest.raises(ImportError, match=rf"mygenx-fastql\[{extra}\]"):
+            __import__(f"fastql.integrations.{module}")
+    else:  # framework installed — the adapter module imports cleanly
+        __import__(f"fastql.integrations.{module}")
+
+
+@pytest.mark.asyncio
+async def test_aiohttp_app_get_post_and_graphiql():
+    pytest.importorskip("aiohttp")
+    from aiohttp import web
+    from aiohttp.test_utils import TestClient, TestServer
+
+    from fastql.integrations.aiohttp import create_aiohttp_app
+
+    app = create_aiohttp_app(make_schema(), graphiql=True)
+
+    @web.middleware
+    async def state_middleware(request, handler):
+        request["fastql_name"] = "aiohttp"
+        return await handler(request)
+
+    app.middlewares.append(state_middleware)
+    async with TestClient(TestServer(app)) as client:
+        post = await client.post("/graphql", json={"query": "{ ping framework }"})
+        post_body = await post.json()
+        page = await client.get("/graphql", headers={"accept": "text/html"})
+        page_body = await page.text()
+    assert post_body["data"] == {"ping": "pong", "framework": "aiohttp"}
+    assert "<!DOCTYPE html>" in page_body or "graphiql" in page_body.lower()
+
+
+def test_sanic_blueprint_get_post_and_graphiql():
+    pytest.importorskip("sanic")
+    pytest.importorskip("sanic_testing")
+    from sanic import Sanic
+    from sanic_testing import TestManager
+
+    from fastql.integrations.sanic import create_sanic_blueprint
+
+    app = Sanic("fastql_test")
+
+    @app.on_request
+    async def identify(request):
+        request.ctx.fastql_name = "sanic"
+
+    app.blueprint(create_sanic_blueprint(make_schema(), graphiql=True))
+    TestManager(app)
+
+    _, post = app.test_client.post("/graphql", json={"query": "{ ping framework }"})
+    _, page = app.test_client.get("/graphql", headers={"accept": "text/html"})
+    assert post.json["data"] == {"ping": "pong", "framework": "sanic"}
+    assert page.status == 200
+
+
+def test_litestar_router_get_post_and_graphiql():
+    pytest.importorskip("litestar")
+    from litestar import Litestar
+    from litestar.testing import TestClient
+
+    from fastql.integrations.litestar import create_litestar_router
+
+    app = Litestar(route_handlers=[create_litestar_router(make_schema(), graphiql=True)])
+    with TestClient(app=app) as client:
+        post = client.post("/graphql", json={"query": "{ ping }"})
+        page = client.get("/graphql", headers={"accept": "text/html"})
+    assert post.json()["data"] == {"ping": "pong"}
+    assert page.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_quart_blueprint_get_post_and_graphiql():
+    pytest.importorskip("quart")
+    from quart import Quart, g
+
+    from fastql.integrations.quart import create_quart_blueprint
+
+    app = Quart(__name__)
+
+    @app.before_request
+    def identify():
+        g.fastql_name = "quart"
+
+    app.register_blueprint(
+        create_quart_blueprint(make_schema(), graphiql=True), url_prefix="/api"
+    )
+    client = app.test_client()
+    post = await client.post("/api/graphql", json={"query": "{ ping framework }"})
+    post_body = await post.get_json()
+    page = await client.get("/api/graphql", headers={"accept": "text/html"})
+    assert post_body["data"] == {"ping": "pong", "framework": "quart"}
+    assert page.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_channels_consumer_drives_graphql_transport_ws():
+    pytest.importorskip("channels")
+    # channels.testing eagerly imports daphne (via ChannelsLiveServerTestCase),
+    # which is a separate optional dependency the adapter itself does not need.
+    pytest.importorskip("daphne")
+    _configure_django()
+    from channels.testing import WebsocketCommunicator
+
+    from fastql.integrations.channels import create_graphql_consumer
+
+    consumer = create_graphql_consumer(make_subscription_schema())
+    communicator = WebsocketCommunicator(
+        consumer.as_asgi(),
+        "/graphql",
+        subprotocols=[GRAPHQL_TRANSPORT_WS_PROTOCOL],
+    )
+    communicator.scope["subprotocols"] = [GRAPHQL_TRANSPORT_WS_PROTOCOL]
+    connected, _ = await communicator.connect()
+    assert connected
+    await communicator.send_json_to({"type": "connection_init"})
+    assert (await communicator.receive_json_from())["type"] == "connection_ack"
+    await communicator.send_json_to(
+        {
+            "id": "events",
+            "type": "subscribe",
+            "payload": {"query": "subscription { events }"},
+        }
+    )
+    assert (await communicator.receive_json_from())["payload"] == {
+        "data": {"events": "ready"}
+    }
+    await communicator.disconnect()

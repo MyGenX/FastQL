@@ -1,0 +1,38 @@
+---
+title: Testing & schema export
+description: An in-process test client and a schema-export CLI.
+---
+
+## Test client
+
+`GraphQLTestClient` runs operations in-process against a schema — no transport
+required — and collects subscription streams.
+
+```python
+from fastql import GraphQLTestClient
+
+client = GraphQLTestClient(schema)
+
+result = await client.execute("{ ping }")
+assert result.errors == []
+
+async for event in client.subscribe("subscription { counter(to: 2) }"):
+    print(event.data)
+```
+
+`execute` covers queries and mutations and accepts `variable_values`, `context`, and
+`operation_name`; `subscribe` yields one `ExecutionResult` per event.
+
+## Schema export CLI
+
+Export a schema as SDL or introspection JSON from the command line:
+
+```bash
+python -m fastql export-schema myapp:schema                 # SDL to stdout
+python -m fastql export-schema myapp:schema --format json   # introspection JSON
+python -m fastql export-schema myapp:schema --output schema.graphql
+```
+
+The target is a `module:attribute` path to a built `Schema`. `--format` is `sdl`
+(default) or `json`; `--output` writes to a file instead of stdout. An unresolvable
+target exits non-zero.

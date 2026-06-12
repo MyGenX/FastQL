@@ -1,0 +1,42 @@
+---
+title: Subscriptions
+description: Stream a result per source event, over WebSocket or SSE.
+---
+
+A subscription resolver returns an async iterator; the executor runs the selection
+set once per yielded value and emits one `ExecutionResult` per event.
+
+```python
+from typing import AsyncGenerator
+from fastql import Field, Subscription, subscribe
+
+
+@Subscription
+class Subscriptions:
+    @Field
+    async def counter(self, to: int = 3) -> AsyncGenerator[int, None]:
+        for value in range(to):
+            yield value
+
+
+async for result in await subscribe(schema, "subscription { counter(to: 2) }"):
+    print(result.data)          # {'counter': 0}, then {'counter': 1}
+```
+
+`subscribe()` returns an async iterator of results, or a single
+`ExecutionResult` (with `executed=False`) when the document is invalid or is not a
+subscription. A subscription operation must select exactly one root field — this is
+enforced during validation. Per-event resolver errors are isolated to that event,
+and the source generator's `aclose()` is guaranteed on disconnect or cancellation.
+
+## Transports
+
+The shared HTTP handler drives subscriptions over a streaming transport, selected by
+the request's `Accept` header:
+
+- **`graphql-transport-ws`** over WebSocket (`connection_init` → `next` → `complete`).
+- **Server-Sent Events** (`Accept: text/event-stream`).
+- **`multipart/mixed`** (`Accept: multipart/mixed`).
+
+The ASGI, Starlette, FastAPI, AIOHTTP, Quart, Litestar, and Channels adapters expose
+the WebSocket transport; every HTTP adapter supports SSE and multipart streaming.

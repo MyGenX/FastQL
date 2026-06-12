@@ -22,3 +22,17 @@ python -m fastql serve myapp.schema:schema \
 
 Run `python -m fastql --help` for the current argument list. Import failures and
 missing attributes are reported before the server starts.
+
+## `export-schema`
+
+Write a built schema's SDL or introspection JSON, to a file or stdout.
+
+```bash
+python -m fastql export-schema myapp.schema:schema                 # SDL to stdout
+python -m fastql export-schema myapp.schema:schema --format json   # introspection JSON
+python -m fastql export-schema myapp.schema:schema --output schema.graphql
+```
+
+The target is a `module:attribute` path to a `Schema`. `--format` is `sdl`
+(default) or `json`; `--output` writes a file instead of stdout. An unresolvable
+target exits non-zero.

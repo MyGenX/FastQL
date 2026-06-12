@@ -5,7 +5,28 @@ A code-first, decorator-driven GraphQL framework for Python with a **hand-built 
 and a **web-framework-agnostic core** — zero runtime dependencies, Python 3.11+.
 
 > Status: early development. The core engine (parse → build → validate → execute, with
-> dependency injection and introspection) is in place.
+> dependency injection and introspection) is in place, alongside a broad set of
+> production capabilities (below).
+
+## Capabilities
+
+On top of the core type system, schema builder, and execution engine:
+
+- **DataLoader** — request-scoped batching and caching to kill N+1 queries.
+- **Schema extensions** — lifecycle hooks (`on_operation`/`on_parse`/`on_validate`/`on_execute`) and a `resolve` wrapper.
+- **Subscriptions** — `subscribe()` streaming over `graphql-transport-ws`, SSE, and `multipart/mixed`.
+- **Incremental delivery** — `@defer` / `@stream` via `execute_incremental()`, collapsing to one result on non-streaming transports.
+- **Generic types** — `Generic[T]` on `@Type`/`@Input`/`@Interface`, concretized per parametrization.
+- **Relay** — `Node` interface, global IDs, and cursor `Connection`s.
+- **Custom directives & visibility** — `@Directive` authoring, private/external field markers, per-member enum customization.
+- **Apollo Federation v2** — federation directives, `_service`/`_entities`, reference resolvers.
+- **File uploads & batching** — `Upload` scalar (multipart spec) and JSON-array query batching.
+- **Tracing** — Apollo-style tracing and an optional OpenTelemetry extension.
+- **Pydantic integration** — derive GraphQL types/inputs from Pydantic models with validation (optional extra).
+- **Testing & export** — in-process `GraphQLTestClient` and an `export-schema` CLI.
+
+See the [capability catalog](https://fastql.vachagan.dev/specifications/capability-catalog)
+for the full map of features to their canonical specifications.
 
 **Documentation:** Start at [fastql.vachagan.dev](https://fastql.vachagan.dev), then use
 the [capability catalog](https://fastql.vachagan.dev/specifications/capability-catalog)
@@ -143,7 +164,8 @@ plus FastAPI/Django/Flask/ASGI adapters) plug in on top and consume `build_schem
 Install only the framework adapter an application uses:
 
 ```bash
-pip install mygenx-fastql[fastapi]   # or starlette, flask, django
+pip install mygenx-fastql[fastapi]   # also: starlette, flask, django,
+                                     # aiohttp, sanic, litestar, quart, channels
 ```
 
 ```python

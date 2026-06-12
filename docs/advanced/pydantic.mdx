@@ -1,0 +1,44 @@
+---
+title: Pydantic integration
+description: Derive GraphQL types and inputs from Pydantic models, with validation.
+---
+
+The optional Pydantic integration derives a GraphQL object or input type from a
+Pydantic v2 model — mapping its fields, optionality, and defaults — and runs the
+model's validators on input coercion. It lives behind the `[pydantic]` extra and is
+never imported by the core.
+
+```bash
+pip install mygenx-fastql[pydantic]
+```
+
+```python
+from pydantic import BaseModel, field_validator
+from fastql import Field, Query
+from fastql.pydantic import pydantic_input, pydantic_type
+
+
+class UserModel(BaseModel):
+    id: int
+    name: str
+    nickname: str | None = None
+
+
+class SignUpInput(BaseModel):
+    age: int
+
+    @field_validator("age")
+    @classmethod
+    def adult(cls, value: int) -> int:
+        if value < 18:
+            raise ValueError("must be 18 or older")
+        return value
+
+
+pydantic_type(UserModel, name="User")      # GraphQL output type
+pydantic_input(SignUpInput, name="SignUp") # GraphQL input object
+```
+
+When a Pydantic-backed input is supplied, the coerced values are constructed through
+the model so its validators run; a validation failure surfaces as a GraphQL error in
+the response rather than crashing execution. Both helpers also work as decorators.

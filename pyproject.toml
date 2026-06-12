@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mygenx-fastql"
-version = "1.0.0"
+version = "1.1.0"
 description = "A code-first, decorator-driven GraphQL framework for Python with a hand-built engine and a web-framework-agnostic core."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -40,15 +40,39 @@ flask = [
 django = [
     "django>=5.2,<6",
 ]
+aiohttp = [
+    "aiohttp>=3.9,<4",
+]
+sanic = [
+    "sanic>=23.0",
+]
+litestar = [
+    "litestar>=2.0,<3",
+]
+quart = [
+    "quart>=0.19,<1",
+]
+channels = [
+    "channels>=4.0,<5",
+    "django>=5.2,<6",
+]
 opentelemetry = [
     "opentelemetry-api>=1.20,<2",
     "opentelemetry-sdk>=1.20,<2",
+]
+pydantic = [
+    "pydantic>=2,<3",
 ]
 all = [
     "starlette>=0.50,<2",
     "fastapi>=0.129,<1",
     "flask>=3.1,<4",
     "django>=5.2,<6",
+    "aiohttp>=3.9,<4",
+    "sanic>=23.0",
+    "litestar>=2.0,<3",
+    "quart>=0.19,<1",
+    "channels>=4.0,<5",
 ]
 dev = [
     "build>=1.2",
