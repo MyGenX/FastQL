@@ -1,0 +1,750 @@
+{
+  "meta": {
+    "repo": "MyGenX/FastQL",
+    "generated_at": "2026-06-17T08:22:17.147Z",
+    "openspec_version": "1.0.0",
+    "visualizer_version": "1.0.0",
+    "root": "openspec"
+  },
+  "folders": [
+    {
+      "path": "openspec",
+      "type": "openspec",
+      "archived": false,
+      "item_count": 41,
+      "visualize": "openspec/visualize.json"
+    },
+    {
+      "path": "openspec/specs",
+      "type": "specs",
+      "archived": false,
+      "item_count": 33,
+      "visualize": "openspec/specs/visualize.json"
+    },
+    {
+      "path": "openspec/changes",
+      "type": "changes",
+      "archived": false,
+      "item_count": 0,
+      "visualize": "openspec/changes/visualize.json"
+    },
+    {
+      "path": "openspec/changes/archive",
+      "type": "archive",
+      "archived": true,
+      "item_count": 8,
+      "visualize": "openspec/changes/archive/visualize.json"
+    }
+  ],
+  "items": [
+    {
+      "id": "apollo-federation",
+      "title": "apollo-federation",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/apollo-federation",
+      "spec_file": "openspec/specs/apollo-federation/spec.md",
+      "visualize": "openspec/specs/apollo-federation/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 5
+    },
+    {
+      "id": "context-injection",
+      "title": "context-injection",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/context-injection",
+      "spec_file": "openspec/specs/context-injection/spec.md",
+      "visualize": "openspec/specs/context-injection/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 8,
+      "scenario_count": 13
+    },
+    {
+      "id": "custom-directives",
+      "title": "custom-directives",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/custom-directives",
+      "spec_file": "openspec/specs/custom-directives/spec.md",
+      "visualize": "openspec/specs/custom-directives/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 4
+    },
+    {
+      "id": "data-loaders",
+      "title": "data-loaders",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/data-loaders",
+      "spec_file": "openspec/specs/data-loaders/spec.md",
+      "visualize": "openspec/specs/data-loaders/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 7
+    },
+    {
+      "id": "definition-extensions",
+      "title": "definition-extensions",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/definition-extensions",
+      "spec_file": "openspec/specs/definition-extensions/spec.md",
+      "visualize": "openspec/specs/definition-extensions/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 2
+    },
+    {
+      "id": "dev-server",
+      "title": "dev-server",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/dev-server",
+      "spec_file": "openspec/specs/dev-server/spec.md",
+      "visualize": "openspec/specs/dev-server/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 9
+    },
+    {
+      "id": "documentation-site",
+      "title": "Documentation Site",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/documentation-site",
+      "spec_file": "openspec/specs/documentation-site/spec.md",
+      "visualize": "openspec/specs/documentation-site/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 8,
+      "scenario_count": 13
+    },
+    {
+      "id": "field-visibility",
+      "title": "field-visibility",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/field-visibility",
+      "spec_file": "openspec/specs/field-visibility/spec.md",
+      "visualize": "openspec/specs/field-visibility/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 3
+    },
+    {
+      "id": "file-uploads",
+      "title": "file-uploads",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/file-uploads",
+      "spec_file": "openspec/specs/file-uploads/spec.md",
+      "visualize": "openspec/specs/file-uploads/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 4
+    },
+    {
+      "id": "generic-types",
+      "title": "generic-types",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/generic-types",
+      "spec_file": "openspec/specs/generic-types/spec.md",
+      "visualize": "openspec/specs/generic-types/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 5
+    },
+    {
+      "id": "graphql-playground",
+      "title": "graphql-playground",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/graphql-playground",
+      "spec_file": "openspec/specs/graphql-playground/spec.md",
+      "visualize": "openspec/specs/graphql-playground/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 1,
+      "scenario_count": 3
+    },
+    {
+      "id": "http-integration-contract",
+      "title": "http-integration-contract",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/http-integration-contract",
+      "spec_file": "openspec/specs/http-integration-contract/spec.md",
+      "visualize": "openspec/specs/http-integration-contract/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 6,
+      "scenario_count": 12
+    },
+    {
+      "id": "incremental-delivery",
+      "title": "incremental-delivery",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/incremental-delivery",
+      "spec_file": "openspec/specs/incremental-delivery/spec.md",
+      "visualize": "openspec/specs/incremental-delivery/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 4
+    },
+    {
+      "id": "integration-packaging",
+      "title": "integration-packaging",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/integration-packaging",
+      "spec_file": "openspec/specs/integration-packaging/spec.md",
+      "visualize": "openspec/specs/integration-packaging/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 5,
+      "scenario_count": 8
+    },
+    {
+      "id": "introspection",
+      "title": "introspection",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/introspection",
+      "spec_file": "openspec/specs/introspection/spec.md",
+      "visualize": "openspec/specs/introspection/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 4
+    },
+    {
+      "id": "language-parsing",
+      "title": "language-parsing",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/language-parsing",
+      "spec_file": "openspec/specs/language-parsing/spec.md",
+      "visualize": "openspec/specs/language-parsing/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 6
+    },
+    {
+      "id": "pydantic-integration",
+      "title": "pydantic-integration",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/pydantic-integration",
+      "spec_file": "openspec/specs/pydantic-integration/spec.md",
+      "visualize": "openspec/specs/pydantic-integration/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 4
+    },
+    {
+      "id": "python-web-framework-adapters",
+      "title": "python-web-framework-adapters",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/python-web-framework-adapters",
+      "spec_file": "openspec/specs/python-web-framework-adapters/spec.md",
+      "visualize": "openspec/specs/python-web-framework-adapters/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 7,
+      "scenario_count": 10
+    },
+    {
+      "id": "query-batching",
+      "title": "query-batching",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/query-batching",
+      "spec_file": "openspec/specs/query-batching/spec.md",
+      "visualize": "openspec/specs/query-batching/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 4
+    },
+    {
+      "id": "query-execution",
+      "title": "query-execution",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/query-execution",
+      "spec_file": "openspec/specs/query-execution/spec.md",
+      "visualize": "openspec/specs/query-execution/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 7,
+      "scenario_count": 14
+    },
+    {
+      "id": "query-validation",
+      "title": "query-validation",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/query-validation",
+      "spec_file": "openspec/specs/query-validation/spec.md",
+      "visualize": "openspec/specs/query-validation/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 7,
+      "scenario_count": 12
+    },
+    {
+      "id": "relay-pagination",
+      "title": "relay-pagination",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/relay-pagination",
+      "spec_file": "openspec/specs/relay-pagination/spec.md",
+      "visualize": "openspec/specs/relay-pagination/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 5
+    },
+    {
+      "id": "schema-building",
+      "title": "schema-building",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/schema-building",
+      "spec_file": "openspec/specs/schema-building/spec.md",
+      "visualize": "openspec/specs/schema-building/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 4,
+      "scenario_count": 9
+    },
+    {
+      "id": "schema-definition",
+      "title": "schema-definition",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/schema-definition",
+      "spec_file": "openspec/specs/schema-definition/spec.md",
+      "visualize": "openspec/specs/schema-definition/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 11,
+      "scenario_count": 25
+    },
+    {
+      "id": "schema-endpoints",
+      "title": "schema-endpoints",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/schema-endpoints",
+      "spec_file": "openspec/specs/schema-endpoints/spec.md",
+      "visualize": "openspec/specs/schema-endpoints/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 5,
+      "scenario_count": 8
+    },
+    {
+      "id": "schema-export-cli",
+      "title": "schema-export-cli",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/schema-export-cli",
+      "spec_file": "openspec/specs/schema-export-cli/spec.md",
+      "visualize": "openspec/specs/schema-export-cli/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 4
+    },
+    {
+      "id": "schema-extensions",
+      "title": "schema-extensions",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/schema-extensions",
+      "spec_file": "openspec/specs/schema-extensions/spec.md",
+      "visualize": "openspec/specs/schema-extensions/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 5
+    },
+    {
+      "id": "server-cli",
+      "title": "server-cli",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/server-cli",
+      "spec_file": "openspec/specs/server-cli/spec.md",
+      "visualize": "openspec/specs/server-cli/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 1,
+      "scenario_count": 4
+    },
+    {
+      "id": "subscription-execution",
+      "title": "subscription-execution",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/subscription-execution",
+      "spec_file": "openspec/specs/subscription-execution/spec.md",
+      "visualize": "openspec/specs/subscription-execution/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 5
+    },
+    {
+      "id": "subscription-transport",
+      "title": "subscription-transport",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/subscription-transport",
+      "spec_file": "openspec/specs/subscription-transport/spec.md",
+      "visualize": "openspec/specs/subscription-transport/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 3,
+      "scenario_count": 5
+    },
+    {
+      "id": "testing-utilities",
+      "title": "testing-utilities",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/testing-utilities",
+      "spec_file": "openspec/specs/testing-utilities/spec.md",
+      "visualize": "openspec/specs/testing-utilities/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 3
+    },
+    {
+      "id": "tracing-instrumentation",
+      "title": "tracing-instrumentation",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/tracing-instrumentation",
+      "spec_file": "openspec/specs/tracing-instrumentation/spec.md",
+      "visualize": "openspec/specs/tracing-instrumentation/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 2,
+      "scenario_count": 3
+    },
+    {
+      "id": "type-system",
+      "title": "type-system",
+      "type": "spec",
+      "status": "implemented",
+      "path": "openspec/specs/type-system",
+      "spec_file": "openspec/specs/type-system/spec.md",
+      "visualize": "openspec/specs/type-system/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-17",
+      "track": "spec",
+      "requirement_count": 4,
+      "scenario_count": 7
+    },
+    {
+      "id": "2026-06-06-graphql-core-framework",
+      "title": "2026-06-06-graphql-core-framework",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-06-graphql-core-framework",
+      "spec_file": "openspec/changes/archive/2026-06-06-graphql-core-framework/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-06-graphql-core-framework/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 48,
+        "done": 48
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "context-injection",
+          "introspection",
+          "language-parsing",
+          "query-execution",
+          "query-validation",
+          "schema-building",
+          "schema-definition",
+          "type-system"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-07-add-python-web-framework-integrations",
+      "title": "2026-06-07-add-python-web-framework-integrations",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-07-add-python-web-framework-integrations",
+      "spec_file": "openspec/changes/archive/2026-06-07-add-python-web-framework-integrations/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-07-add-python-web-framework-integrations/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 38,
+        "done": 38
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "context-injection",
+          "http-integration-contract",
+          "integration-packaging",
+          "python-web-framework-adapters",
+          "schema-endpoints"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-07-dev-server-playground",
+      "title": "2026-06-07-dev-server-playground",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-07-dev-server-playground",
+      "spec_file": "openspec/changes/archive/2026-06-07-dev-server-playground/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-07-dev-server-playground/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 30,
+        "done": 30
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "dev-server",
+          "graphql-playground",
+          "schema-endpoints",
+          "server-cli"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-07-init-fastql-documentation",
+      "title": "2026-06-07-init-fastql-documentation",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-07-init-fastql-documentation",
+      "spec_file": "openspec/changes/archive/2026-06-07-init-fastql-documentation/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-07-init-fastql-documentation/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 17,
+        "done": 17
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "documentation-site"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-07-robust-types-and-operation-classes",
+      "title": "2026-06-07-robust-types-and-operation-classes",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-07-robust-types-and-operation-classes",
+      "spec_file": "openspec/changes/archive/2026-06-07-robust-types-and-operation-classes/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-07-robust-types-and-operation-classes/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 18,
+        "done": 18
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "schema-building",
+          "schema-definition"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-07-unify-schema-definition-api",
+      "title": "2026-06-07-unify-schema-definition-api",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-07-unify-schema-definition-api",
+      "spec_file": "openspec/changes/archive/2026-06-07-unify-schema-definition-api/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-07-unify-schema-definition-api/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 13,
+        "done": 13
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "context-injection",
+          "definition-extensions",
+          "introspection",
+          "query-execution",
+          "schema-building",
+          "schema-definition",
+          "type-system"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-12-docs-categorization-audit",
+      "title": "2026-06-12-docs-categorization-audit",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-12-docs-categorization-audit",
+      "spec_file": "openspec/changes/archive/2026-06-12-docs-categorization-audit/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-12-docs-categorization-audit/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 13,
+        "done": 13
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "documentation-site"
+        ]
+      }
+    },
+    {
+      "id": "2026-06-12-production-grade-platform",
+      "title": "2026-06-12-production-grade-platform",
+      "type": "proposal",
+      "status": "archived",
+      "path": "openspec/changes/archive/2026-06-12-production-grade-platform",
+      "spec_file": "openspec/changes/archive/2026-06-12-production-grade-platform/proposal.md",
+      "visualize": "openspec/changes/archive/2026-06-12-production-grade-platform/visualize.json",
+      "archived": true,
+      "last_updated": "2026-06-17",
+      "track": "change",
+      "tasks": {
+        "total": 70,
+        "done": 70
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "apollo-federation",
+          "custom-directives",
+          "data-loaders",
+          "field-visibility",
+          "file-uploads",
+          "generic-types",
+          "incremental-delivery",
+          "pydantic-integration",
+          "query-batching",
+          "query-execution",
+          "query-validation",
+          "relay-pagination",
+          "schema-definition",
+          "schema-export-cli",
+          "schema-extensions",
+          "subscription-execution",
+          "subscription-transport",
+          "testing-utilities",
+          "tracing-instrumentation"
+        ]
+      }
+    }
+  ]
+}

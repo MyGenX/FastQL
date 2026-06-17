@@ -1,0 +1,13 @@
+{
+  "type": "item",
+  "id": "tracing-instrumentation",
+  "title": "tracing-instrumentation",
+  "spec_type": "spec",
+  "status": "implemented",
+  "spec_file": "spec.md",
+  "created_at": "2026-06-17",
+  "last_updated": "2026-06-17",
+  "track": "spec",
+  "requirement_count": 2,
+  "scenario_count": 3
+}

@@ -1,0 +1,32 @@
+{
+  "type": "item",
+  "id": "2026-06-07-unify-schema-definition-api",
+  "title": "2026-06-07-unify-schema-definition-api",
+  "spec_type": "proposal",
+  "status": "archived",
+  "spec_file": "proposal.md",
+  "created_at": "2026-06-17",
+  "last_updated": "2026-06-17",
+  "archived": true,
+  "track": "change",
+  "tasks": {
+    "total": 13,
+    "done": 13
+  },
+  "docs": {
+    "proposal": "proposal.md",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "relations": {
+    "relates_to": [
+      "context-injection",
+      "definition-extensions",
+      "introspection",
+      "query-execution",
+      "schema-building",
+      "schema-definition",
+      "type-system"
+    ]
+  }
+}

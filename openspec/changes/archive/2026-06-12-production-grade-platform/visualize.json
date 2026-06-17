@@ -1,0 +1,44 @@
+{
+  "type": "item",
+  "id": "2026-06-12-production-grade-platform",
+  "title": "2026-06-12-production-grade-platform",
+  "spec_type": "proposal",
+  "status": "archived",
+  "spec_file": "proposal.md",
+  "created_at": "2026-06-17",
+  "last_updated": "2026-06-17",
+  "archived": true,
+  "track": "change",
+  "tasks": {
+    "total": 70,
+    "done": 70
+  },
+  "docs": {
+    "proposal": "proposal.md",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "relations": {
+    "relates_to": [
+      "apollo-federation",
+      "custom-directives",
+      "data-loaders",
+      "field-visibility",
+      "file-uploads",
+      "generic-types",
+      "incremental-delivery",
+      "pydantic-integration",
+      "query-batching",
+      "query-execution",
+      "query-validation",
+      "relay-pagination",
+      "schema-definition",
+      "schema-export-cli",
+      "schema-extensions",
+      "subscription-execution",
+      "subscription-transport",
+      "testing-utilities",
+      "tracing-instrumentation"
+    ]
+  }
+}

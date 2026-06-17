@@ -1,0 +1,30 @@
+{
+  "type": "item",
+  "id": "2026-06-07-add-python-web-framework-integrations",
+  "title": "2026-06-07-add-python-web-framework-integrations",
+  "spec_type": "proposal",
+  "status": "archived",
+  "spec_file": "proposal.md",
+  "created_at": "2026-06-17",
+  "last_updated": "2026-06-17",
+  "archived": true,
+  "track": "change",
+  "tasks": {
+    "total": 38,
+    "done": 38
+  },
+  "docs": {
+    "proposal": "proposal.md",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "relations": {
+    "relates_to": [
+      "context-injection",
+      "http-integration-contract",
+      "integration-packaging",
+      "python-web-framework-adapters",
+      "schema-endpoints"
+    ]
+  }
+}
