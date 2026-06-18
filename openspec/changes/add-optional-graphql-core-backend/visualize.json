@@ -1,0 +1,31 @@
+{
+  "type": "item",
+  "id": "add-optional-graphql-core-backend",
+  "title": "add-optional-graphql-core-backend",
+  "spec_type": "proposal",
+  "status": "draft",
+  "spec_file": "proposal.md",
+  "created_at": "2026-06-18",
+  "last_updated": "2026-06-18",
+  "archived": false,
+  "track": "change",
+  "tasks": {
+    "total": 65,
+    "done": 0
+  },
+  "docs": {
+    "proposal": "proposal.md",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "relations": {
+    "relates_to": [
+      "incremental-delivery",
+      "integration-packaging",
+      "query-execution",
+      "query-validation",
+      "schema-building",
+      "subscription-execution"
+    ]
+  }
+}
