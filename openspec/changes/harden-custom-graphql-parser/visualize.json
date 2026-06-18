@@ -1,0 +1,27 @@
+{
+  "type": "item",
+  "id": "harden-custom-graphql-parser",
+  "title": "harden-custom-graphql-parser",
+  "spec_type": "proposal",
+  "status": "draft",
+  "spec_file": "proposal.md",
+  "created_at": "2026-06-18",
+  "last_updated": "2026-06-18",
+  "archived": false,
+  "track": "change",
+  "tasks": {
+    "total": 47,
+    "done": 0
+  },
+  "docs": {
+    "proposal": "proposal.md",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "relations": {
+    "relates_to": [
+      "integration-packaging",
+      "language-parsing"
+    ]
+  }
+}

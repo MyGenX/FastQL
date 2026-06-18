@@ -1,0 +1,28 @@
+{
+  "type": "item",
+  "id": "upgrade-federation-latest-v2",
+  "title": "upgrade-federation-latest-v2",
+  "spec_type": "proposal",
+  "status": "draft",
+  "spec_file": "proposal.md",
+  "created_at": "2026-06-18",
+  "last_updated": "2026-06-18",
+  "archived": false,
+  "track": "change",
+  "tasks": {
+    "total": 28,
+    "done": 0
+  },
+  "docs": {
+    "proposal": "proposal.md",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "relations": {
+    "relates_to": [
+      "apollo-federation",
+      "schema-endpoints",
+      "schema-export-cli"
+    ]
+  }
+}

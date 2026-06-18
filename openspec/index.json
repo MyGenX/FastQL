@@ -1,7 +1,7 @@
 {
   "meta": {
     "repo": "MyGenX/FastQL",
-    "generated_at": "2026-06-17T08:22:17.147Z",
+    "generated_at": "2026-06-18T07:50:37.295Z",
     "openspec_version": "1.0.0",
     "visualizer_version": "1.0.0",
     "root": "openspec"
@@ -11,7 +11,7 @@
       "path": "openspec",
       "type": "openspec",
       "archived": false,
-      "item_count": 41,
+      "item_count": 44,
       "visualize": "openspec/visualize.json"
     },
     {
@@ -498,6 +498,92 @@
       "track": "spec",
       "requirement_count": 4,
       "scenario_count": 7
+    },
+    {
+      "id": "add-optional-graphql-core-backend",
+      "title": "add-optional-graphql-core-backend",
+      "type": "proposal",
+      "status": "draft",
+      "path": "openspec/changes/add-optional-graphql-core-backend",
+      "spec_file": "openspec/changes/add-optional-graphql-core-backend/proposal.md",
+      "visualize": "openspec/changes/add-optional-graphql-core-backend/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-18",
+      "track": "change",
+      "tasks": {
+        "total": 65,
+        "done": 0
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "incremental-delivery",
+          "integration-packaging",
+          "query-execution",
+          "query-validation",
+          "schema-building",
+          "subscription-execution"
+        ]
+      }
+    },
+    {
+      "id": "harden-custom-graphql-parser",
+      "title": "harden-custom-graphql-parser",
+      "type": "proposal",
+      "status": "draft",
+      "path": "openspec/changes/harden-custom-graphql-parser",
+      "spec_file": "openspec/changes/harden-custom-graphql-parser/proposal.md",
+      "visualize": "openspec/changes/harden-custom-graphql-parser/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-18",
+      "track": "change",
+      "tasks": {
+        "total": 47,
+        "done": 0
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "integration-packaging",
+          "language-parsing"
+        ]
+      }
+    },
+    {
+      "id": "upgrade-federation-latest-v2",
+      "title": "upgrade-federation-latest-v2",
+      "type": "proposal",
+      "status": "draft",
+      "path": "openspec/changes/upgrade-federation-latest-v2",
+      "spec_file": "openspec/changes/upgrade-federation-latest-v2/proposal.md",
+      "visualize": "openspec/changes/upgrade-federation-latest-v2/visualize.json",
+      "archived": false,
+      "last_updated": "2026-06-18",
+      "track": "change",
+      "tasks": {
+        "total": 28,
+        "done": 0
+      },
+      "docs": {
+        "proposal": "proposal.md",
+        "design": "design.md",
+        "tasks": "tasks.md"
+      },
+      "relations": {
+        "relates_to": [
+          "apollo-federation",
+          "schema-endpoints",
+          "schema-export-cli"
+        ]
+      }
     },
     {
       "id": "2026-06-06-graphql-core-framework",
